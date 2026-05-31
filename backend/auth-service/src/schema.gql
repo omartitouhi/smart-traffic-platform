@@ -1,0 +1,58 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthPayloadEntity {
+  accessToken: String!
+  refreshToken: String!
+  user: UserEntity!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  login(input: LoginInput!): AuthPayloadEntity!
+  logout(input: RefreshTokenInput!): Boolean!
+  refreshToken(input: RefreshTokenInput!): AuthPayloadEntity!
+  register(input: RegisterInput!): AuthPayloadEntity!
+}
+
+type Query {
+  me: UserEntity!
+  users(skip: Int = 0, take: Int = 50): [UserEntity!]!
+}
+
+input RefreshTokenInput {
+  refreshToken: String!
+}
+
+input RegisterInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  password: String!
+}
+
+"""Rôles disponibles dans le système"""
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+type UserEntity {
+  createdAt: DateTime!
+  email: String!
+  firstName: String!
+  id: ID!
+  lastName: String!
+  role: Role!
+  updatedAt: DateTime!
+}
