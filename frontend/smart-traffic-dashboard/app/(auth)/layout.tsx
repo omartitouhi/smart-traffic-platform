@@ -8,7 +8,7 @@ type AuthLayoutProps = {
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <Providers>
-      <main className="grid min-h-dvh place-items-center bg-zinc-50 px-6">
+      <main className="grid min-h-dvh place-items-center bg-zinc-50 px-4 py-8 sm:px-6">
         {children}
       </main>
     </Providers>

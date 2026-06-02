@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
-import { StatusMessage } from "@/components/ui/feedback";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { notify } from "@/components/ui/toast";
 import type { RegisterInput } from "@/types/auth";
 
 type FormErrors = Partial<Record<keyof RegisterInput, string>>;
@@ -48,13 +50,17 @@ export function RegisterForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle",
   );
-  const [message, setMessage] = useState("");
+
+  function updateField(field: keyof RegisterInput, value: string) {
+    const nextValues = { ...values, [field]: value };
+    setValues(nextValues);
+    setErrors(validateRegister(nextValues));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateRegister(values);
     setErrors(nextErrors);
-    setMessage("");
 
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -68,120 +74,67 @@ export function RegisterForm() {
         password: values.password,
       });
       setStatus("success");
-      setMessage("Compte cree avec succes.");
+      notify.success("Compte cree avec succes.");
       router.replace("/dashboard");
     } catch (error) {
       setStatus("error");
-      setMessage(
-        error instanceof Error ? error.message : "Impossible de creer le compte.",
-      );
+      notify.error(error instanceof Error ? error.message : "Impossible de creer le compte.");
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="firstName">
-            Prenom
-          </label>
-          <input
-            id="firstName"
-            autoComplete="given-name"
-            value={values.firstName}
-            onChange={(event) =>
-              setValues((current) => ({
-                ...current,
-                firstName: event.target.value,
-              }))
-            }
-            className="h-11 w-full border border-border bg-white px-3 text-sm outline-none focus:border-zinc-900"
-          />
-          {errors.firstName ? (
-            <p className="text-sm text-red-600">{errors.firstName}</p>
-          ) : null}
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="lastName">
-            Nom
-          </label>
-          <input
-            id="lastName"
-            autoComplete="family-name"
-            value={values.lastName}
-            onChange={(event) =>
-              setValues((current) => ({
-                ...current,
-                lastName: event.target.value,
-              }))
-            }
-            className="h-11 w-full border border-border bg-white px-3 text-sm outline-none focus:border-zinc-900"
-          />
-          {errors.lastName ? (
-            <p className="text-sm text-red-600">{errors.lastName}</p>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="email">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={values.email}
-          onChange={(event) =>
-            setValues((current) => ({ ...current, email: event.target.value }))
-          }
-          className="h-11 w-full border border-border bg-white px-3 text-sm outline-none focus:border-zinc-900"
+        <Input
+          label="Prenom"
+          id="firstName"
+          autoComplete="given-name"
+          value={values.firstName}
+          error={errors.firstName}
+          onChange={(event) => updateField("firstName", event.target.value)}
         />
-        {errors.email ? (
-          <p className="text-sm text-red-600">{errors.email}</p>
-        ) : null}
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="password">
-          Mot de passe
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="new-password"
-          value={values.password}
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              password: event.target.value,
-            }))
-          }
-          className="h-11 w-full border border-border bg-white px-3 text-sm outline-none focus:border-zinc-900"
+        <Input
+          label="Nom"
+          id="lastName"
+          autoComplete="family-name"
+          value={values.lastName}
+          error={errors.lastName}
+          onChange={(event) => updateField("lastName", event.target.value)}
         />
-        {errors.password ? (
-          <p className="text-sm text-red-600">{errors.password}</p>
-        ) : null}
       </div>
 
-      {message ? (
-        <StatusMessage tone={status === "success" ? "success" : "error"}>
-          {message}
-        </StatusMessage>
-      ) : null}
+      <Input
+        label="Email"
+        id="email"
+        type="email"
+        autoComplete="email"
+        value={values.email}
+        error={errors.email}
+        onChange={(event) => updateField("email", event.target.value)}
+      />
 
-      <button
+      <Input
+        label="Mot de passe"
+        id="password"
+        type="password"
+        autoComplete="new-password"
+        value={values.password}
+        error={errors.password}
+        hint="Minimum 8 caracteres avec majuscule, minuscule, chiffre et symbole."
+        onChange={(event) => updateField("password", event.target.value)}
+      />
+
+      <Button
         type="submit"
-        disabled={status === "loading"}
-        className="h-11 w-full bg-zinc-950 px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-zinc-400"
+        isLoading={status === "loading"}
+        className="w-full"
       >
         {status === "loading" ? "Creation..." : "Creer le compte"}
-      </button>
+      </Button>
 
       <p className="text-center text-sm text-muted-foreground">
         Deja un compte ?{" "}
-        <Link className="font-medium text-zinc-950" href="/login">
+        <Link className="font-medium text-zinc-950 underline-offset-4 hover:underline" href="/login">
           Se connecter
         </Link>
       </p>

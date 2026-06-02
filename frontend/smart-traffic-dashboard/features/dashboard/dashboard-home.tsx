@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Car, LogOut, MapPinned, ShieldCheck } from "lucide-react";
+import { Activity, Car, LogOut, MapPinned, ShieldCheck, TrendingUp } from "lucide-react";
 import { useAuth } from "@/features/auth/auth-provider";
+import { Button } from "@/components/ui/button";
+import { MetricCard } from "@/components/ui/feedback";
+import { Card } from "@/components/ui/card";
 
 const navigationCards = [
   {
@@ -31,12 +34,12 @@ export function DashboardHome() {
 
   return (
     <div className="space-y-8">
-      <section className="flex flex-col gap-6 border border-border bg-white p-6 md:flex-row md:items-center md:justify-between">
+      <section className="flex flex-col gap-6 border border-border bg-white p-6 shadow-[0_1px_0_rgba(0,0,0,0.03)] md:flex-row md:items-center md:justify-between">
         <div className="max-w-2xl">
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
             Bienvenue
           </p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-normal text-zinc-950">
+          <h2 className="mt-2 text-3xl font-semibold tracking-normal text-zinc-950 md:text-4xl">
             Bonjour, {displayName}
           </h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -44,19 +47,43 @@ export function DashboardHome() {
             acceder aux modules operationnels de la plateforme.
           </p>
         </div>
-        <button
+        <Button
           type="button"
           onClick={() => void logout()}
-          className="inline-flex h-11 items-center justify-center gap-2 border border-border px-4 text-sm font-medium text-zinc-800 transition-colors hover:bg-muted"
+          variant="secondary"
+          icon={<LogOut className="size-4" aria-hidden="true" />}
         >
-          <LogOut className="size-4" aria-hidden="true" />
           Logout
-        </button>
+        </Button>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <MetricCard
+          icon={<Car className="size-5" aria-hidden="true" />}
+          label="Flotte"
+          value="Active"
+          helper="Gestion centralisee des vehicules"
+        />
+        <MetricCard
+          icon={<MapPinned className="size-5" aria-hidden="true" />}
+          label="GPS"
+          value="Trace"
+          helper="Positions historisees par vehicule"
+        />
+        <MetricCard
+          icon={<Activity className="size-5" aria-hidden="true" />}
+          label="Gateway"
+          value="GraphQL"
+          helper="Point d'entree unique du frontend"
+        />
       </section>
 
       <section>
         <div className="mb-4">
-          <h3 className="text-lg font-semibold">Navigation</h3>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="size-4 text-zinc-700" aria-hidden="true" />
+            <h3 className="text-lg font-semibold">Navigation</h3>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Acces rapide aux fonctionnalites principales.
           </p>
@@ -69,20 +96,22 @@ export function DashboardHome() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="group border border-border bg-white p-5 transition-colors hover:border-zinc-950"
+                className="group block transition-transform duration-200 hover:-translate-y-0.5"
               >
-                <div className="mb-4 flex size-11 items-center justify-center border border-border bg-muted text-zinc-800">
-                  <Icon className="size-5" aria-hidden="true" />
-                </div>
-                <h4 className="text-base font-semibold text-zinc-950">
-                  {item.title}
-                </h4>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {item.description}
-                </p>
-                <span className="mt-4 inline-flex text-sm font-medium text-zinc-950 group-hover:underline">
-                  Ouvrir
-                </span>
+                <Card className="h-full p-5 transition-all duration-200 group-hover:border-zinc-400 group-hover:shadow-sm">
+                  <div className="mb-4 flex size-11 items-center justify-center border border-border bg-zinc-50 text-zinc-800">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </div>
+                  <h4 className="text-base font-semibold text-zinc-950">
+                    {item.title}
+                  </h4>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {item.description}
+                  </p>
+                  <span className="mt-4 inline-flex text-sm font-medium text-zinc-950 underline-offset-4 group-hover:underline">
+                    Ouvrir
+                  </span>
+                </Card>
               </Link>
             );
           })}

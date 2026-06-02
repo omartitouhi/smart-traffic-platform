@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Car, LayoutDashboard, LogOut } from "lucide-react";
+import { Car, ChevronRight, LayoutDashboard, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/features/auth/auth-provider";
 
@@ -27,10 +27,7 @@ export function MainNavigation({ variant = "topbar" }: MainNavigationProps) {
           : "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       }
     >
-      <nav
-        aria-label="Main navigation"
-        className={isSidebar ? "flex flex-col gap-1" : "flex flex-wrap gap-2"}
-      >
+      <nav aria-label="Main navigation" className={isSidebar ? "flex flex-col gap-1" : "flex flex-wrap gap-2"}>
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -40,14 +37,24 @@ export function MainNavigation({ variant = "topbar" }: MainNavigationProps) {
             <Link
               key={item.href}
               href={item.href}
-              className={`inline-flex h-10 items-center gap-2 border px-3 text-sm font-medium transition-colors ${
+              className={`group inline-flex h-10 items-center gap-2 border px-3 text-sm font-medium transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 ${
                 isActive
-                  ? "border-zinc-950 bg-zinc-950 text-white"
-                  : "border-transparent text-zinc-700 hover:border-border hover:bg-muted hover:text-zinc-950"
-              } ${isSidebar ? "w-full" : ""}`}
+                  ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
+                  : "border-transparent text-zinc-700 hover:border-border hover:bg-zinc-50 hover:text-zinc-950"
+              } ${isSidebar ? "w-full justify-between" : ""}`}
             >
-              <Icon className="size-4" aria-hidden="true" />
-              {item.label}
+              <span className="inline-flex items-center gap-2">
+                <Icon className="size-4" aria-hidden="true" />
+                {item.label}
+              </span>
+              {isSidebar ? (
+                <ChevronRight
+                  className={`size-4 transition-transform group-hover:translate-x-0.5 ${
+                    isActive ? "opacity-100" : "opacity-0"
+                  }`}
+                  aria-hidden="true"
+                />
+              ) : null}
             </Link>
           );
         })}
@@ -70,7 +77,7 @@ export function MainNavigation({ variant = "topbar" }: MainNavigationProps) {
         <button
           type="button"
           onClick={() => void logout()}
-          className={`inline-flex h-10 items-center justify-center gap-2 border border-border px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-muted hover:text-zinc-950 ${
+          className={`inline-flex h-10 items-center justify-center gap-2 border border-border px-3 text-sm font-medium text-zinc-700 transition-all duration-200 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 ${
             isSidebar ? "w-full" : ""
           }`}
         >

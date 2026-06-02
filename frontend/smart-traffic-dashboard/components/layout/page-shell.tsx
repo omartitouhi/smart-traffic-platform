@@ -10,9 +10,13 @@ export function PageShell({ title, description, children }: PageShellProps) {
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold tracking-normal">{title}</h2>
+        <h2 className="text-2xl font-semibold tracking-normal text-zinc-950 md:text-3xl">
+          {title}
+        </h2>
         {description ? (
-          <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            {description}
+          </p>
         ) : null}
       </div>
       {children ? (

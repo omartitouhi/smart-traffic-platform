@@ -1,5 +1,6 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
+import { Card } from "@/components/ui/card";
 
 type LoadingStateProps = {
   message: string;
@@ -7,7 +8,7 @@ type LoadingStateProps = {
 
 export function LoadingState({ message }: LoadingStateProps) {
   return (
-    <div className="flex min-h-40 items-center justify-center border border-border bg-white p-8 text-sm text-muted-foreground">
+    <div className="flex min-h-40 items-center justify-center border border-border bg-white p-8 text-sm text-muted-foreground shadow-[0_1px_0_rgba(0,0,0,0.03)]">
       <div className="flex items-center gap-3">
         <Loader2 className="size-5 animate-spin text-zinc-700" aria-hidden="true" />
         <span>{message}</span>
@@ -74,5 +75,36 @@ export function StatusMessage({ tone, children }: StatusMessageProps) {
       ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
       : "border border-red-200 bg-red-50 text-red-800";
 
-  return <p className={`${className} p-3 text-sm`}>{children}</p>;
+  return <p className={`${className} p-3 text-sm font-medium`}>{children}</p>;
+}
+
+export function MetricCard({
+  icon,
+  label,
+  value,
+  helper,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  helper?: string;
+}) {
+  return (
+    <Card className="p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-3 text-3xl font-semibold tracking-normal text-zinc-950">
+            {value}
+          </p>
+          {helper ? <p className="mt-2 text-sm text-muted-foreground">{helper}</p> : null}
+        </div>
+        <div className="grid size-11 place-items-center border border-border bg-zinc-50 text-zinc-800">
+          {icon}
+        </div>
+      </div>
+    </Card>
+  );
 }

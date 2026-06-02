@@ -1,12 +1,20 @@
 "use client";
 
 import { useMutation, useQuery } from "@apollo/client/react";
-import { ArrowLeft, MapPinned, Plus } from "lucide-react";
-import Link from "next/link";
+import { ArrowLeft, CalendarClock, Car, Gauge, MapPinned, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { SIMULATE_VEHICLE_POSITION_MUTATION } from "@/graphql/mutations/vehicle.mutations";
+import {
+  DELETE_VEHICLE_MUTATION,
+  SIMULATE_VEHICLE_POSITION_MUTATION,
+} from "@/graphql/mutations/vehicle.mutations";
 import { VEHICLE_QUERY } from "@/graphql/queries/vehicle.queries";
-import { EmptyState, ErrorState, LoadingState, StatusMessage } from "@/components/ui/feedback";
+import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
+import { Badge, vehicleStatusTone } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
+import { notify } from "@/components/ui/toast";
 import type { Vehicle, VehiclePosition } from "@/types/vehicle";
 
 type VehicleDetailsProps = {
@@ -21,6 +29,10 @@ type SimulateVehiclePositionResult = {
   simulateVehiclePosition: VehiclePosition;
 };
 
+type DeleteVehicleResult = {
+  deleteVehicle: boolean;
+};
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
@@ -29,7 +41,8 @@ function formatDate(value: string) {
 }
 
 export function VehicleDetails({ vehicleId }: VehicleDetailsProps) {
-  const [message, setMessage] = useState("");
+  const router = useRouter();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle",
   );
@@ -43,10 +56,13 @@ export function VehicleDetails({ vehicleId }: VehicleDetailsProps) {
     SimulateVehiclePositionResult,
     { vehicleId: string }
   >(SIMULATE_VEHICLE_POSITION_MUTATION);
+  const [deleteVehicle, { loading: isDeleting }] = useMutation<
+    DeleteVehicleResult,
+    { id: string }
+  >(DELETE_VEHICLE_MUTATION);
 
   async function handleSimulatePosition() {
     setStatus("loading");
-    setMessage("");
 
     try {
       await simulateVehiclePosition({
@@ -56,13 +72,27 @@ export function VehicleDetails({ vehicleId }: VehicleDetailsProps) {
       });
       await refetch();
       setStatus("success");
-      setMessage("Position GPS simulee ajoutee.");
+      notify.success("Position GPS simulee ajoutee.");
     } catch (simulationError) {
       setStatus("error");
-      setMessage(
+      notify.error(
         simulationError instanceof Error
           ? simulationError.message
           : "Impossible de simuler la position GPS.",
+      );
+    }
+  }
+
+  async function handleDelete() {
+    try {
+      await deleteVehicle({ variables: { id: vehicleId } });
+      notify.success("Vehicule supprime.");
+      router.replace("/vehicles");
+    } catch (deleteError) {
+      notify.error(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Impossible de supprimer le vehicule.",
       );
     }
   }
@@ -114,68 +144,90 @@ export function VehicleDetails({ vehicleId }: VehicleDetailsProps) {
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
+          <ButtonLink
             href={`/vehicles/${vehicle.id}/positions`}
-            className="inline-flex h-11 items-center justify-center gap-2 border border-border px-4 text-sm font-medium text-zinc-800 transition-colors hover:bg-muted"
+            variant="secondary"
+            icon={<MapPinned className="size-4" aria-hidden="true" />}
           >
-            <MapPinned className="size-4" aria-hidden="true" />
             Historique GPS
-          </Link>
-          <button
+          </ButtonLink>
+          <Button
             type="button"
-            disabled={status === "loading"}
+            isLoading={status === "loading"}
             onClick={() => void handleSimulatePosition()}
-            className="inline-flex h-11 items-center justify-center gap-2 bg-zinc-950 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+            icon={<Plus className="size-4" aria-hidden="true" />}
           >
-            <Plus className="size-4" aria-hidden="true" />
             {status === "loading" ? "Simulation..." : "Ajouter position GPS simulee"}
-          </button>
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            icon={<Trash2 className="size-4" aria-hidden="true" />}
+            onClick={() => setIsDeleteOpen(true)}
+          >
+            Supprimer
+          </Button>
         </div>
       </div>
 
-      {message ? (
-        <StatusMessage tone={status === "success" ? "success" : "error"}>
-          {message}
-        </StatusMessage>
-      ) : null}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <DetailItem label="Matricule" value={vehicle.matricule} />
+      <div className="grid gap-4 md:grid-cols-3">
+        <DetailItem icon={<Car className="size-4" />} label="Matricule" value={vehicle.matricule} />
+        <DetailItem icon={<Gauge className="size-4" />} label="Statut" value={<Badge tone={vehicleStatusTone(vehicle.status)}>{vehicle.status}</Badge>} />
+        <DetailItem icon={<CalendarClock className="size-4" />} label="Cree le" value={formatDate(vehicle.createdAt)} />
         <DetailItem label="Brand" value={vehicle.brand} />
         <DetailItem label="Model" value={vehicle.model} />
         <DetailItem label="Type" value={vehicle.type} />
-        <DetailItem label="Status" value={vehicle.status} />
-        <DetailItem label="Cree le" value={formatDate(vehicle.createdAt)} />
         <DetailItem label="Mis a jour le" value={formatDate(vehicle.updatedAt)} />
       </div>
+
+      <Modal
+        open={isDeleteOpen}
+        title="Supprimer le vehicule"
+        description={`Cette action supprimera ${vehicle.matricule} et ses positions GPS.`}
+        confirmLabel="Supprimer"
+        isLoading={isDeleting}
+        onConfirm={() => void handleDelete()}
+        onClose={() => setIsDeleteOpen(false)}
+      />
     </section>
   );
 }
 
 function BackLink() {
   return (
-    <Link
+    <ButtonLink
       href="/vehicles"
-      className="inline-flex h-10 items-center gap-2 border border-border px-3 text-sm font-medium text-zinc-800 transition-colors hover:bg-muted"
+      variant="secondary"
+      size="sm"
+      icon={<ArrowLeft className="size-4" aria-hidden="true" />}
     >
-      <ArrowLeft className="size-4" aria-hidden="true" />
       Retour
-    </Link>
+    </ButtonLink>
   );
 }
 
 type DetailItemProps = {
   label: string;
-  value: string;
+  value: React.ReactNode;
+  icon?: React.ReactNode;
 };
 
-function DetailItem({ label, value }: DetailItemProps) {
+function DetailItem({ label, value, icon }: DetailItemProps) {
   return (
-    <div className="border border-border bg-white p-5">
-      <p className="text-xs font-medium uppercase tracking-normal text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-2 text-base font-semibold text-zinc-950">{value}</p>
-    </div>
+    <Card className="p-5 transition-all duration-200 hover:border-zinc-300 hover:shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
+            {label}
+          </p>
+          <div className="mt-2 text-base font-semibold text-zinc-950">{value}</div>
+        </div>
+        {icon ? (
+          <div className="grid size-9 place-items-center border border-border bg-zinc-50 text-zinc-700">
+            {icon}
+          </div>
+        ) : null}
+      </div>
+    </Card>
   );
 }

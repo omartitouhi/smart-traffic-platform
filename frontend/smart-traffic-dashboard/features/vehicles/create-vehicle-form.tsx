@@ -1,11 +1,13 @@
 "use client";
 
 import { useMutation } from "@apollo/client/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { CREATE_VEHICLE_MUTATION } from "@/graphql/mutations/vehicle.mutations";
-import { StatusMessage } from "@/components/ui/feedback";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { notify } from "@/components/ui/toast";
 import type { CreateVehicleInput, Vehicle } from "@/types/vehicle";
 
 type CreateVehicleResult = {
@@ -65,7 +67,6 @@ export function CreateVehicleForm() {
   const router = useRouter();
   const [values, setValues] = useState<CreateVehicleInput>(initialValues);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle",
   );
@@ -75,17 +76,15 @@ export function CreateVehicleForm() {
   >(CREATE_VEHICLE_MUTATION);
 
   function updateField(field: keyof CreateVehicleInput, value: string) {
-    setValues((current) => ({
-      ...current,
-      [field]: value,
-    }));
+    const nextValues = { ...values, [field]: value };
+    setValues(nextValues);
+    setErrors(validateVehicle(nextValues));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateVehicle(values);
     setErrors(nextErrors);
-    setMessage("");
 
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -104,13 +103,11 @@ export function CreateVehicleForm() {
         },
       });
       setStatus("success");
-      setMessage("Vehicule cree avec succes.");
+      notify.success("Vehicule cree avec succes.");
       router.replace("/vehicles");
     } catch (error) {
       setStatus("error");
-      setMessage(
-        error instanceof Error ? error.message : "Impossible de creer le vehicule.",
-      );
+      notify.error(error instanceof Error ? error.message : "Impossible de creer le vehicule.");
     }
   }
 
@@ -128,94 +125,62 @@ export function CreateVehicleForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="border border-border bg-white p-6">
+      <Card>
+      <form onSubmit={handleSubmit} className="p-6">
         <div className="grid gap-5 md:grid-cols-2">
-          <VehicleField
+          <Input
             id="matricule"
             label="Matricule"
             value={values.matricule}
             error={errors.matricule}
-            onChange={(value) => updateField("matricule", value)}
+            onChange={(event) => updateField("matricule", event.target.value)}
           />
-          <VehicleField
+          <Input
             id="brand"
             label="Brand"
             value={values.brand}
             error={errors.brand}
-            onChange={(value) => updateField("brand", value)}
+            onChange={(event) => updateField("brand", event.target.value)}
           />
-          <VehicleField
+          <Input
             id="model"
             label="Model"
             value={values.model}
             error={errors.model}
-            onChange={(value) => updateField("model", value)}
+            onChange={(event) => updateField("model", event.target.value)}
           />
-          <VehicleField
+          <Input
             id="type"
             label="Type"
             value={values.type}
             error={errors.type}
-            onChange={(value) => updateField("type", value)}
+            onChange={(event) => updateField("type", event.target.value)}
           />
-          <VehicleField
+          <Input
             id="status"
             label="Status"
             value={values.status}
             error={errors.status}
-            onChange={(value) => updateField("status", value)}
+            onChange={(event) => updateField("status", event.target.value)}
           />
         </div>
 
-        {message ? (
-          <div className="mt-5">
-            <StatusMessage tone={status === "success" ? "success" : "error"}>
-              {message}
-            </StatusMessage>
-          </div>
-        ) : null}
-
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <Link
+          <ButtonLink
             href="/vehicles"
-            className="inline-flex h-11 items-center justify-center border border-border px-4 text-sm font-medium text-zinc-800 transition-colors hover:bg-muted"
+            variant="secondary"
           >
             Annuler
-          </Link>
-          <button
+          </ButtonLink>
+          <Button
             type="submit"
-            disabled={status === "loading"}
-            className="inline-flex h-11 items-center justify-center bg-zinc-950 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+            isLoading={status === "loading"}
           >
             {status === "loading" ? "Creation..." : "Creer vehicule"}
-          </button>
+          </Button>
         </div>
       </form>
+      </Card>
     </section>
-  );
-}
-
-type VehicleFieldProps = {
-  id: keyof CreateVehicleInput;
-  label: string;
-  value: string;
-  error?: string;
-  onChange: (value: string) => void;
-};
-
-function VehicleField({ id, label, value, error, onChange }: VehicleFieldProps) {
-  return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium" htmlFor={id}>
-        {label}
-      </label>
-      <input
-        id={id}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full border border-border bg-white px-3 text-sm outline-none focus:border-zinc-900"
-      />
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-    </div>
   );
 }

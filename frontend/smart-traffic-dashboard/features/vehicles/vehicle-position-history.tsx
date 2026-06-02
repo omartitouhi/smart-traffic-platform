@@ -1,11 +1,13 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
-import { ArrowLeft, MapPinned } from "lucide-react";
-import Link from "next/link";
+import { ArrowLeft, MapPinned, RefreshCw } from "lucide-react";
 import { useMemo } from "react";
 import { VEHICLE_POSITIONS_QUERY } from "@/graphql/queries/vehicle.queries";
-import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
+import { EmptyState, ErrorState } from "@/components/ui/feedback";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Table } from "@/components/ui/table";
+import { TableSkeleton } from "@/components/ui/loader";
 import type { VehiclePosition } from "@/types/vehicle";
 
 type VehiclePositionHistoryProps = {
@@ -52,13 +54,14 @@ export function VehiclePositionHistory({
     <section className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <Link
+          <ButtonLink
             href={`/vehicles/${vehicleId}`}
-            className="inline-flex h-10 items-center gap-2 border border-border px-3 text-sm font-medium text-zinc-800 transition-colors hover:bg-muted"
+            variant="secondary"
+            size="sm"
+            icon={<ArrowLeft className="size-4" aria-hidden="true" />}
           >
-            <ArrowLeft className="size-4" aria-hidden="true" />
             Retour detail vehicule
-          </Link>
+          </ButtonLink>
           <p className="mt-6 text-sm font-medium text-muted-foreground">
             Vehicle Management
           </p>
@@ -70,17 +73,18 @@ export function VehiclePositionHistory({
             ancienne.
           </p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => void refetch()}
-          className="h-11 border border-border px-4 text-sm font-medium text-zinc-800 transition-colors hover:bg-muted"
+          icon={<RefreshCw className="size-4" aria-hidden="true" />}
         >
           Actualiser
-        </button>
+        </Button>
       </div>
 
       {loading ? (
-        <LoadingState message="Chargement de l'historique GPS..." />
+        <TableSkeleton rows={6} />
       ) : null}
 
       {error ? (
@@ -108,8 +112,7 @@ export function VehiclePositionHistory({
       ) : null}
 
       {!loading && !error && sortedPositions.length > 0 ? (
-        <div className="overflow-hidden border border-border bg-white">
-          <div className="overflow-x-auto">
+        <Table>
             <table className="w-full min-w-[680px] border-collapse text-left text-sm">
               <thead className="bg-muted text-xs uppercase tracking-normal text-muted-foreground">
                 <tr>
@@ -121,7 +124,7 @@ export function VehiclePositionHistory({
               </thead>
               <tbody>
                 {sortedPositions.map((position) => (
-                  <tr key={position.id} className="border-t border-border">
+                  <tr key={position.id} className="border-t border-border transition-colors hover:bg-zinc-50">
                     <td className="px-4 py-4 font-medium text-zinc-950">
                       {formatDate(position.recordedAt)}
                     </td>
@@ -136,8 +139,7 @@ export function VehiclePositionHistory({
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
+        </Table>
       ) : null}
     </section>
   );

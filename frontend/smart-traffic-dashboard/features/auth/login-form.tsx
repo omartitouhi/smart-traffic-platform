@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
-import { StatusMessage } from "@/components/ui/feedback";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { notify } from "@/components/ui/toast";
 import type { LoginInput } from "@/types/auth";
 
 type FormErrors = Partial<Record<keyof LoginInput, string>>;
@@ -36,13 +38,17 @@ export function LoginForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle",
   );
-  const [message, setMessage] = useState("");
+
+  function updateField(field: keyof LoginInput, value: string) {
+    const nextValues = { ...values, [field]: value };
+    setValues(nextValues);
+    setErrors(validateLogin(nextValues));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateLogin(values);
     setErrors(nextErrors);
-    setMessage("");
 
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -54,76 +60,47 @@ export function LoginForm() {
         password: values.password,
       });
       setStatus("success");
-      setMessage("Connexion reussie.");
+      notify.success("Connexion reussie.");
       router.replace("/dashboard");
     } catch (error) {
       setStatus("error");
-      setMessage(
-        error instanceof Error ? error.message : "Impossible de se connecter.",
-      );
+      notify.error(error instanceof Error ? error.message : "Impossible de se connecter.");
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="email">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={values.email}
-          onChange={(event) =>
-            setValues((current) => ({ ...current, email: event.target.value }))
-          }
-          className="h-11 w-full border border-border bg-white px-3 text-sm outline-none focus:border-zinc-900"
-        />
-        {errors.email ? (
-          <p className="text-sm text-red-600">{errors.email}</p>
-        ) : null}
-      </div>
+      <Input
+        label="Email"
+        id="email"
+        type="email"
+        autoComplete="email"
+        value={values.email}
+        error={errors.email}
+        onChange={(event) => updateField("email", event.target.value)}
+      />
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="password">
-          Mot de passe
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          value={values.password}
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              password: event.target.value,
-            }))
-          }
-          className="h-11 w-full border border-border bg-white px-3 text-sm outline-none focus:border-zinc-900"
-        />
-        {errors.password ? (
-          <p className="text-sm text-red-600">{errors.password}</p>
-        ) : null}
-      </div>
+      <Input
+        label="Mot de passe"
+        id="password"
+        type="password"
+        autoComplete="current-password"
+        value={values.password}
+        error={errors.password}
+        onChange={(event) => updateField("password", event.target.value)}
+      />
 
-      {message ? (
-        <StatusMessage tone={status === "success" ? "success" : "error"}>
-          {message}
-        </StatusMessage>
-      ) : null}
-
-      <button
+      <Button
         type="submit"
-        disabled={status === "loading"}
-        className="h-11 w-full bg-zinc-950 px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-zinc-400"
+        isLoading={status === "loading"}
+        className="w-full"
       >
         {status === "loading" ? "Connexion..." : "Se connecter"}
-      </button>
+      </Button>
 
       <p className="text-center text-sm text-muted-foreground">
         Pas encore de compte ?{" "}
-        <Link className="font-medium text-zinc-950" href="/register">
+        <Link className="font-medium text-zinc-950 underline-offset-4 hover:underline" href="/register">
           Creer un compte
         </Link>
       </p>

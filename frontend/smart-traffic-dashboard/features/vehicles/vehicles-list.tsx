@@ -1,16 +1,30 @@
 "use client";
 
-import { useQuery } from "@apollo/client/react";
-import { Car, Eye, MapPinned, Plus, Search } from "lucide-react";
-import Link from "next/link";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { ArrowDownUp, Car, Eye, MapPinned, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { DELETE_VEHICLE_MUTATION } from "@/graphql/mutations/vehicle.mutations";
 import { VEHICLES_QUERY } from "@/graphql/queries/vehicle.queries";
-import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
+import { EmptyState, ErrorState } from "@/components/ui/feedback";
+import { Badge, vehicleStatusTone } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
+import { Table, TablePagination } from "@/components/ui/table";
+import { notify } from "@/components/ui/toast";
+import { TableSkeleton } from "@/components/ui/loader";
 import type { Vehicle } from "@/types/vehicle";
 
 type VehiclesQueryResult = {
   vehicles: Vehicle[];
 };
+
+type DeleteVehicleResult = {
+  deleteVehicle: boolean;
+};
+
+type SortKey = "createdAt" | "matricule" | "status";
+const PAGE_SIZE = 8;
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -21,8 +35,16 @@ function formatDate(value: string) {
 
 export function VehiclesList() {
   const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(1);
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const { data, loading, error, refetch } =
     useQuery<VehiclesQueryResult>(VEHICLES_QUERY);
+  const [deleteVehicle, { loading: isDeleting }] = useMutation<
+    DeleteVehicleResult,
+    { id: string }
+  >(DELETE_VEHICLE_MUTATION);
 
   const vehicles = useMemo(() => data?.vehicles ?? [], [data?.vehicles]);
   const filteredVehicles = useMemo(() => {
@@ -33,6 +55,42 @@ export function VehiclesList() {
       vehicle.matricule.toLowerCase().includes(normalizedSearch),
     );
   }, [search, vehicles]);
+  const sortedVehicles = useMemo(() => {
+    return [...filteredVehicles].sort((a, b) => {
+      const aValue = sortKey === "createdAt" ? new Date(a.createdAt).getTime() : a[sortKey];
+      const bValue = sortKey === "createdAt" ? new Date(b.createdAt).getTime() : b[sortKey];
+      const result = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      return sortDirection === "asc" ? result : -result;
+    });
+  }, [filteredVehicles, sortDirection, sortKey]);
+  const pageCount = Math.max(1, Math.ceil(sortedVehicles.length / PAGE_SIZE));
+  const paginatedVehicles = sortedVehicles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  function toggleSort(nextKey: SortKey) {
+    setPage(1);
+    if (nextKey === sortKey) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(nextKey);
+    setSortDirection(nextKey === "createdAt" ? "desc" : "asc");
+  }
+
+  async function confirmDelete() {
+    if (!vehicleToDelete) return;
+    try {
+      await deleteVehicle({ variables: { id: vehicleToDelete.id } });
+      notify.success("Vehicule supprime.");
+      setVehicleToDelete(null);
+      await refetch();
+    } catch (deleteError) {
+      notify.error(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Impossible de supprimer le vehicule.",
+      );
+    }
+  }
 
   return (
     <section className="space-y-6">
@@ -49,40 +107,40 @@ export function VehiclesList() {
             l&apos;historique GPS.
           </p>
         </div>
-        <Link
+        <ButtonLink
           href="/vehicles/create"
-          className="inline-flex h-11 items-center justify-center gap-2 bg-zinc-950 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
+          icon={<Plus className="size-4" aria-hidden="true" />}
         >
-          <Plus className="size-4" aria-hidden="true" />
           Ajouter vehicule
-        </Link>
+        </ButtonLink>
       </div>
 
-      <div className="flex flex-col gap-3 border border-border bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <input
+      <div className="flex flex-col gap-3 border border-border bg-white p-4 shadow-[0_1px_0_rgba(0,0,0,0.03)] md:flex-row md:items-end md:justify-between">
+        <div className="w-full md:max-w-sm">
+          <Input
+            label="Recherche"
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             placeholder="Rechercher par matricule"
-            className="h-11 w-full border border-border bg-white pl-10 pr-3 text-sm outline-none focus:border-zinc-900"
+            leftIcon={<Search className="size-4" aria-hidden="true" />}
           />
         </div>
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => void refetch()}
-          className="h-11 border border-border px-4 text-sm font-medium text-zinc-800 transition-colors hover:bg-muted"
+          icon={<RefreshCw className="size-4" aria-hidden="true" />}
         >
           Actualiser
-        </button>
+        </Button>
       </div>
 
       {loading ? (
-        <LoadingState message="Chargement des vehicules..." />
+        <TableSkeleton rows={6} />
       ) : null}
 
       {error ? (
@@ -107,12 +165,12 @@ export function VehiclesList() {
           title="Aucun vehicule"
           message="Ajoutez un premier vehicule pour commencer a gerer la flotte."
           action={
-            <Link
+            <ButtonLink
               href="/vehicles/create"
-              className="inline-flex h-10 items-center justify-center bg-zinc-950 px-4 text-sm font-medium text-white"
+              size="sm"
             >
               Ajouter vehicule
-            </Link>
+            </ButtonLink>
           }
         />
       ) : null}
@@ -125,24 +183,29 @@ export function VehiclesList() {
         />
       ) : null}
 
-      {!loading && !error && filteredVehicles.length > 0 ? (
-        <div className="overflow-hidden border border-border bg-white">
-          <div className="overflow-x-auto">
+      {!loading && !error && sortedVehicles.length > 0 ? (
+        <Table>
             <table className="w-full min-w-[760px] border-collapse text-left text-sm">
               <thead className="bg-muted text-xs uppercase tracking-normal text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Matricule</th>
+                  <th className="px-4 py-3 font-semibold">
+                    <SortButton label="Matricule" onClick={() => toggleSort("matricule")} />
+                  </th>
                   <th className="px-4 py-3 font-semibold">Marque</th>
                   <th className="px-4 py-3 font-semibold">Modele</th>
                   <th className="px-4 py-3 font-semibold">Type</th>
-                  <th className="px-4 py-3 font-semibold">Statut</th>
-                  <th className="px-4 py-3 font-semibold">Cree le</th>
+                  <th className="px-4 py-3 font-semibold">
+                    <SortButton label="Statut" onClick={() => toggleSort("status")} />
+                  </th>
+                  <th className="px-4 py-3 font-semibold">
+                    <SortButton label="Cree le" onClick={() => toggleSort("createdAt")} />
+                  </th>
                   <th className="px-4 py-3 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredVehicles.map((vehicle) => (
-                  <tr key={vehicle.id} className="border-t border-border">
+                {paginatedVehicles.map((vehicle) => (
+                  <tr key={vehicle.id} className="border-t border-border transition-colors hover:bg-zinc-50">
                     <td className="px-4 py-4 font-medium text-zinc-950">
                       {vehicle.matricule}
                     </td>
@@ -150,38 +213,77 @@ export function VehiclesList() {
                     <td className="px-4 py-4">{vehicle.model}</td>
                     <td className="px-4 py-4">{vehicle.type}</td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex border border-border bg-muted px-2 py-1 text-xs font-medium">
+                      <Badge tone={vehicleStatusTone(vehicle.status)}>
                         {vehicle.status}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-4 py-4 text-muted-foreground">
                       {formatDate(vehicle.createdAt)}
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex justify-end gap-2">
-                        <Link
+                        <ButtonLink
                           href={`/vehicles/${vehicle.id}`}
-                          className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-medium hover:bg-muted"
+                          variant="secondary"
+                          size="sm"
+                          icon={<Eye className="size-4" aria-hidden="true" />}
                         >
-                          <Eye className="size-4" aria-hidden="true" />
                           Detail
-                        </Link>
-                        <Link
+                        </ButtonLink>
+                        <ButtonLink
                           href={`/vehicles/${vehicle.id}/positions`}
-                          className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-medium hover:bg-muted"
+                          variant="secondary"
+                          size="sm"
+                          icon={<MapPinned className="size-4" aria-hidden="true" />}
                         >
-                          <MapPinned className="size-4" aria-hidden="true" />
                           GPS
-                        </Link>
+                        </ButtonLink>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          icon={<Trash2 className="size-4" aria-hidden="true" />}
+                          onClick={() => setVehicleToDelete(vehicle)}
+                        >
+                          Supprimer
+                        </Button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
+            <TablePagination
+              page={page}
+              pageCount={pageCount}
+              onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+              onNext={() => setPage((current) => Math.min(pageCount, current + 1))}
+            />
+        </Table>
       ) : null}
+
+      <Modal
+        open={Boolean(vehicleToDelete)}
+        title="Supprimer le vehicule"
+        description={`Cette action supprimera ${vehicleToDelete?.matricule ?? "ce vehicule"} et ses positions GPS.`}
+        confirmLabel="Supprimer"
+        isLoading={isDeleting}
+        onConfirm={() => void confirmDelete()}
+        onClose={() => setVehicleToDelete(null)}
+      />
     </section>
+  );
+}
+
+function SortButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-2 font-semibold transition-colors hover:text-zinc-950"
+    >
+      {label}
+      <ArrowDownUp className="size-3.5" aria-hidden="true" />
+    </button>
   );
 }

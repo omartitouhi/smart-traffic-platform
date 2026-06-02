@@ -30,3 +30,22 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: #18181b;
+  color: #ffffff;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}

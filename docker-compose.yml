@@ -94,6 +94,7 @@ services:
       AUTH_SERVICE_GRAPHQL_URL: http://auth-service:3000/graphql
       VEHICLE_SERVICE_GRAPHQL_URL: http://vehicle-service:3000/graphql
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
+      CORS_ORIGIN: http://localhost:3000
     ports:
       - "4000:3000"
     depends_on:

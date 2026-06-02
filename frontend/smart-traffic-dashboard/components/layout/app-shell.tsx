@@ -7,27 +7,39 @@ type AppShellProps = {
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="min-h-dvh bg-zinc-50">
+    <div className="min-h-dvh bg-zinc-50 text-zinc-950">
       <div className="mx-auto flex min-h-dvh w-full max-w-[1440px]">
-        <aside className="hidden w-72 shrink-0 border-r border-border bg-white lg:block">
-          <div className="flex h-20 flex-col justify-center border-b border-border px-6">
-            <p className="text-sm font-medium text-muted-foreground">
-              Smart Traffic
-            </p>
-            <h1 className="text-lg font-semibold">Operations Dashboard</h1>
+        <aside className="hidden w-72 shrink-0 border-r border-border bg-white/95 lg:block">
+          <div className="flex h-24 flex-col justify-center border-b border-border px-6">
+            <div className="flex items-center gap-3">
+              <div className="grid size-10 place-items-center border border-zinc-950 bg-zinc-950 text-sm font-semibold text-white">
+                ST
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
+                  Smart Traffic
+                </p>
+                <h1 className="text-base font-semibold">Operations Dashboard</h1>
+              </div>
+            </div>
           </div>
-          <div className="p-4">
+          <div className="p-4 pt-5">
             <MainNavigation variant="sidebar" />
           </div>
         </aside>
         <div className="min-w-0 flex-1">
-          <header className="border-b border-border bg-white lg:hidden">
+          <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur lg:hidden">
             <div className="flex min-h-16 flex-col gap-3 px-4 py-4 sm:px-6">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Smart Traffic
-                </p>
-                <h1 className="text-lg font-semibold">Operations Dashboard</h1>
+              <div className="flex items-center gap-3">
+                <div className="grid size-9 place-items-center border border-zinc-950 bg-zinc-950 text-xs font-semibold text-white">
+                  ST
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    Smart Traffic
+                  </p>
+                  <h1 className="text-base font-semibold">Operations Dashboard</h1>
+                </div>
               </div>
               <MainNavigation variant="topbar" />
             </div>
