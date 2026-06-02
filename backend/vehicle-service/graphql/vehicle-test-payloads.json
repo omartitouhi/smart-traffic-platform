@@ -1,0 +1,39 @@
+{
+  "CreateVehicle": {
+    "input": {
+      "matricule": "TN-1234",
+      "brand": "Toyota",
+      "model": "Corolla",
+      "type": "SEDAN",
+      "status": "ACTIVE"
+    }
+  },
+  "UpdateVehicle": {
+    "id": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11",
+    "input": {
+      "brand": "Toyota",
+      "model": "Corolla Hybrid",
+      "status": "MAINTENANCE"
+    }
+  },
+  "Vehicle": {
+    "id": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11"
+  },
+  "DeleteVehicle": {
+    "id": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11"
+  },
+  "AddVehiclePosition": {
+    "input": {
+      "vehicleId": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11",
+      "latitude": 36.8065,
+      "longitude": 10.1815,
+      "speed": 45.5
+    }
+  },
+  "VehiclePositions": {
+    "vehicleId": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11"
+  },
+  "SimulateVehiclePosition": {
+    "vehicleId": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11"
+  }
+}

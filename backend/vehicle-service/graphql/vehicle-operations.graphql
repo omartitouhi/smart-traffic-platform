@@ -1,0 +1,92 @@
+# Vehicle queries
+
+query Vehicles {
+  vehicles {
+    id
+    matricule
+    brand
+    model
+    type
+    status
+    createdAt
+    updatedAt
+  }
+}
+
+query Vehicle($id: ID!) {
+  vehicle(id: $id) {
+    id
+    matricule
+    brand
+    model
+    type
+    status
+    createdAt
+    updatedAt
+  }
+}
+
+query VehiclePositions($vehicleId: ID!) {
+  vehiclePositions(vehicleId: $vehicleId) {
+    id
+    vehicleId
+    latitude
+    longitude
+    speed
+    recordedAt
+  }
+}
+
+# Vehicle mutations
+
+mutation CreateVehicle($input: CreateVehicleInput!) {
+  createVehicle(input: $input) {
+    id
+    matricule
+    brand
+    model
+    type
+    status
+    createdAt
+    updatedAt
+  }
+}
+
+mutation UpdateVehicle($id: ID!, $input: UpdateVehicleInput!) {
+  updateVehicle(id: $id, input: $input) {
+    id
+    matricule
+    brand
+    model
+    type
+    status
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteVehicle($id: ID!) {
+  deleteVehicle(id: $id)
+}
+
+mutation AddVehiclePosition($input: AddVehiclePositionInput!) {
+  addVehiclePosition(input: $input) {
+    id
+    vehicleId
+    latitude
+    longitude
+    speed
+    recordedAt
+  }
+}
+
+mutation SimulateVehiclePosition($vehicleId: ID!) {
+  simulateVehiclePosition(vehicleId: $vehicleId) {
+    id
+    vehicleId
+    latitude
+    longitude
+    speed
+    recordedAt
+  }
+}
