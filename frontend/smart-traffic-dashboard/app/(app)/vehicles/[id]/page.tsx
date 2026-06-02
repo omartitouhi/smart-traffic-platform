@@ -1,4 +1,4 @@
-import { PageShell } from "@/components/layout/page-shell";
+import { VehicleDetails } from "@/features/vehicles/vehicle-details";
 
 type VehicleDetailsPageProps = {
   params: Promise<{
@@ -11,10 +11,5 @@ export default async function VehicleDetailsPage({
 }: VehicleDetailsPageProps) {
   const { id } = await params;
 
-  return (
-    <PageShell
-      title="Vehicle Details"
-      description={`Vehicle detail route prepared for ${id}.`}
-    />
-  );
+  return <VehicleDetails vehicleId={id} />;
 }

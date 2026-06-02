@@ -17,3 +17,11 @@ export type VehiclePosition = {
   speed: number;
   recordedAt: string;
 };
+
+export type CreateVehicleInput = {
+  matricule: string;
+  brand: string;
+  model: string;
+  type: string;
+  status: string;
+};

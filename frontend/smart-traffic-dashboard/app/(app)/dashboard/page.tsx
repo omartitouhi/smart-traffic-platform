@@ -1,10 +1,5 @@
-import { PageShell } from "@/components/layout/page-shell";
+import { DashboardHome } from "@/features/dashboard/dashboard-home";
 
 export default function DashboardPage() {
-  return (
-    <PageShell
-      title="Dashboard"
-      description="Main overview for traffic operations."
-    />
-  );
+  return <DashboardHome />;
 }

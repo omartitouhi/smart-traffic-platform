@@ -1,4 +1,4 @@
-import { PageShell } from "@/components/layout/page-shell";
+import { VehiclePositionHistory } from "@/features/vehicles/vehicle-position-history";
 
 type VehiclePositionsPageProps = {
   params: Promise<{
@@ -11,10 +11,5 @@ export default async function VehiclePositionsPage({
 }: VehiclePositionsPageProps) {
   const { id } = await params;
 
-  return (
-    <PageShell
-      title="Vehicle Positions"
-      description={`GPS position history route prepared for ${id}.`}
-    />
-  );
+  return <VehiclePositionHistory vehicleId={id} />;
 }

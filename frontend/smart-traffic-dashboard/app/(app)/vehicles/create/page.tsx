@@ -1,10 +1,5 @@
-import { PageShell } from "@/components/layout/page-shell";
+import { CreateVehicleForm } from "@/features/vehicles/create-vehicle-form";
 
 export default function CreateVehiclePage() {
-  return (
-    <PageShell
-      title="Create Vehicle"
-      description="Vehicle creation form placeholder."
-    />
-  );
+  return <CreateVehicleForm />;
 }

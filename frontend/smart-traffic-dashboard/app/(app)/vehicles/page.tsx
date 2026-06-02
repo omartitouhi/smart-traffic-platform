@@ -1,10 +1,5 @@
-import { PageShell } from "@/components/layout/page-shell";
+import { VehiclesList } from "@/features/vehicles/vehicles-list";
 
 export default function VehiclesPage() {
-  return (
-    <PageShell
-      title="Vehicle Management"
-      description="Vehicle list and fleet operations."
-    />
-  );
+  return <VehiclesList />;
 }

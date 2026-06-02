@@ -1,44 +1,32 @@
 import { gql } from "@apollo/client";
+import {
+  VEHICLE_FRAGMENT,
+  VEHICLE_POSITION_FRAGMENT,
+} from "@/graphql/fragments/vehicle.fragments";
 
 export const VEHICLES_QUERY = gql`
   query Vehicles {
     vehicles {
-      id
-      matricule
-      brand
-      model
-      type
-      status
-      createdAt
-      updatedAt
+      ...VehicleFields
     }
   }
+  ${VEHICLE_FRAGMENT}
 `;
 
 export const VEHICLE_QUERY = gql`
   query Vehicle($id: ID!) {
     vehicle(id: $id) {
-      id
-      matricule
-      brand
-      model
-      type
-      status
-      createdAt
-      updatedAt
+      ...VehicleFields
     }
   }
+  ${VEHICLE_FRAGMENT}
 `;
 
 export const VEHICLE_POSITIONS_QUERY = gql`
   query VehiclePositions($vehicleId: ID!) {
     vehiclePositions(vehicleId: $vehicleId) {
-      id
-      vehicleId
-      latitude
-      longitude
-      speed
-      recordedAt
+      ...VehiclePositionFields
     }
   }
+  ${VEHICLE_POSITION_FRAGMENT}
 `;
