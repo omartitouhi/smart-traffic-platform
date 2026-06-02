@@ -74,7 +74,9 @@ export class GraphQLProxyController {
 
   private extractOperation(body: GraphQLRequestBody): string {
     if (body.operationName) {
-      return body.operationName.charAt(0).toLowerCase() + body.operationName.slice(1);
+      return (
+        body.operationName.charAt(0).toLowerCase() + body.operationName.slice(1)
+      );
     }
 
     const match = body.query?.match(

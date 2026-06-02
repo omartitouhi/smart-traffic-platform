@@ -59,7 +59,9 @@ export class AuthResolver {
   @UseGuards(GqlThrottlerGuard)
   @Throttle({ default: { ttl: 60_000, limit: 20 } })
   @Mutation(() => AuthPayloadEntity)
-  refreshToken(@Args('input') input: RefreshTokenInput): Promise<AuthPayloadEntity> {
+  refreshToken(
+    @Args('input') input: RefreshTokenInput,
+  ): Promise<AuthPayloadEntity> {
     return this.authService.refreshTokens(input);
   }
 
@@ -98,8 +100,10 @@ export class AuthResolver {
   @Roles(Role.ADMIN)
   @Query(() => [UserEntity])
   users(
-    @Args('take', { type: () => Int, nullable: true, defaultValue: 50 }) take: number,
-    @Args('skip', { type: () => Int, nullable: true, defaultValue: 0 }) skip: number,
+    @Args('take', { type: () => Int, nullable: true, defaultValue: 50 })
+    take: number,
+    @Args('skip', { type: () => Int, nullable: true, defaultValue: 0 })
+    skip: number,
   ): Promise<UserEntity[]> {
     return this.authService.getUsers(take, skip);
   }

@@ -32,12 +32,20 @@ import { GqlThrottlerGuard } from './guards/gql-throttler.guard';
         //
         // Note cast : @nestjs/jwt définit expiresIn comme StringValue (type brandé
         // du package ms) et non string ; le cast est inévitable avec cette version.
-        signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN ?? '15m') as unknown as number },
+        signOptions: {
+          expiresIn: (process.env.JWT_EXPIRES_IN ?? '15m') as unknown as number,
+        },
       }),
     }),
   ],
   // GqlThrottlerGuard doit être dans providers pour que le DI container
   // le connaisse explicitement dans ce module (requis par @UseGuards).
-  providers: [AuthService, AuthResolver, JwtStrategy, RolesGuard, GqlThrottlerGuard],
+  providers: [
+    AuthService,
+    AuthResolver,
+    JwtStrategy,
+    RolesGuard,
+    GqlThrottlerGuard,
+  ],
 })
 export class AuthModule {}

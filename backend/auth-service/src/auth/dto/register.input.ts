@@ -1,5 +1,11 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsEmail, IsNotEmpty, IsString, MaxLength, IsStrongPassword } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  IsStrongPassword,
+} from 'class-validator';
 
 /**
  * DTO d'entrée GraphQL pour la mutation register.

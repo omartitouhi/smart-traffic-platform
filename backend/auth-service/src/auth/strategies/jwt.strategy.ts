@@ -1,19 +1,20 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Role } from '../../common/enums/role.enum';
 
 /** Forme du payload décodé depuis le JWT. */
 export interface JwtPayload {
   sub: string;
   email: string;
-  role: string;
+  role: Role;
 }
 
 /** Objet attaché à req.user après validation du token. */
 export interface AuthUser {
   id: string;
   email: string;
-  role: string;
+  role: Role;
 }
 
 /**
@@ -29,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Fail-fast : l'application ne doit pas démarrer sans JWT_SECRET
     if (!secret) {
       throw new InternalServerErrorException(
-        'JWT_SECRET est absent des variables d\'environnement.',
+        "JWT_SECRET est absent des variables d'environnement.",
       );
     }
     super({

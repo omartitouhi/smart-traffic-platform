@@ -43,10 +43,14 @@ export class AuthService {
   ) {
     // Fail-fast : les deux secrets doivent être présents au démarrage
     if (!process.env.JWT_SECRET) {
-      throw new InternalServerErrorException('JWT_SECRET est absent des variables d\'environnement.');
+      throw new InternalServerErrorException(
+        "JWT_SECRET est absent des variables d'environnement.",
+      );
     }
     if (!process.env.JWT_REFRESH_SECRET) {
-      throw new InternalServerErrorException('JWT_REFRESH_SECRET est absent des variables d\'environnement.');
+      throw new InternalServerErrorException(
+        "JWT_REFRESH_SECRET est absent des variables d'environnement.",
+      );
     }
 
     // Valider les durées JWT au démarrage.
@@ -80,7 +84,7 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role as unknown as Role,
+      role: Role[user.role],
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -109,7 +113,8 @@ export class AuthService {
       { sub: user.id },
       {
         secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ?? '7d') as unknown as number,
+        expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ??
+          '7d') as unknown as number,
       },
     );
 
@@ -123,11 +128,14 @@ export class AuthService {
    * Chaque appel écrase le hash précédent. Un second login depuis un autre
    * appareil invalide silencieusement la session du premier. Pour du multi-sessions,
    * remplacer ce champ par une table dédiée RefreshToken (one-to-many avec User).   */
-  private async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
+  private async storeRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<void> {
     // SHA-256 avant bcrypt → évite la troncature silencieuse à 72 octets
     const hash = await bcrypt.hash(sha256(refreshToken), REFRESH_SALT_ROUNDS);
     // Lire l'expiry directement depuis le JWT signé (champ "exp" en secondes Unix)
-    const decoded = this.jwtService.decode(refreshToken) as { exp: number };
+    const decoded = this.jwtService.decode<{ exp: number }>(refreshToken);
     const expiresAt = new Date(decoded.exp * 1000);
 
     await this.prisma.user.update({
@@ -160,7 +168,10 @@ export class AuthService {
     } catch (e) {
       // P2002 = unique constraint violation → email déjà utilisé
       // Remplace la vérification pré-create non-atomique (race condition TOCTOU)
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
         throw new ConflictException('Un compte avec cet email existe déjà.');
       }
       throw e;
@@ -223,7 +234,9 @@ export class AuthService {
     }
 
     // 2. Récupérer l'utilisateur et vérifier qu'il a une session active
-    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
     if (!user || !user.refreshTokenHash) {
       throw new UnauthorizedException('Refresh token invalide ou expiré.');
     }
@@ -239,7 +252,10 @@ export class AuthService {
 
     // 4 & 5. Comparer le hash — si invalide → token reuse attack → révocation totale
     // SHA-256 avant compare pour correspondre au stockage (même pré-hash)
-    const isValid = await bcrypt.compare(sha256(input.refreshToken), user.refreshTokenHash);
+    const isValid = await bcrypt.compare(
+      sha256(input.refreshToken),
+      user.refreshTokenHash,
+    );
     if (!isValid) {
       await this.prisma.user.update({
         where: { id: user.id },

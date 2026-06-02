@@ -13,7 +13,10 @@ import type { Request, Response } from 'express';
  */
 @Injectable()
 export class GqlThrottlerGuard extends ThrottlerGuard {
-  getRequestResponse(context: ExecutionContext): { req: Request; res: Response } {
+  getRequestResponse(context: ExecutionContext): {
+    req: Request;
+    res: Response;
+  } {
     const ctx = GqlExecutionContext.create(context);
     const req = ctx.getContext<{ req: Request }>().req;
     // Dans certaines configs Apollo/Express, req.res peut être absent.

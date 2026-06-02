@@ -230,7 +230,8 @@ describe('VehicleService', () => {
   });
 
   it('should simulate a GPS position', async () => {
-    jest.spyOn(Math, 'random')
+    jest
+      .spyOn(Math, 'random')
       .mockReturnValueOnce(0.5)
       .mockReturnValueOnce(0.5)
       .mockReturnValueOnce(0.5);
