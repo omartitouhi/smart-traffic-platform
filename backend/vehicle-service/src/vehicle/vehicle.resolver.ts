@@ -108,4 +108,11 @@ export class VehicleResolver {
   ): Promise<VehiclePositionEntity> {
     return this.vehicleService.addPosition(input);
   }
+
+  @Mutation(() => VehiclePositionEntity)
+  simulateVehiclePosition(
+    @Args('vehicleId', { type: () => ID }) vehicleId: string,
+  ): Promise<VehiclePositionEntity> {
+    return this.vehicleService.simulateVehiclePosition(vehicleId);
+  }
 }

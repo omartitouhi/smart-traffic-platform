@@ -159,6 +159,30 @@ export class VehicleService {
     }
   }
 
+  async simulateVehiclePosition(
+    vehicleId: string,
+  ): Promise<VehiclePositionRecord> {
+    await this.findVehicleOrThrow(vehicleId);
+
+    try {
+      const position = await this.prisma.vehiclePosition.create({
+        data: {
+          vehicleId,
+          latitude: this.randomDecimal(-90, 90, 6),
+          longitude: this.randomDecimal(-180, 180, 6),
+          speed: this.randomDecimal(0, 300, 2),
+        },
+      });
+
+      return this.toVehiclePositionRecord(position);
+    } catch (error) {
+      this.handlePrismaError(
+        error,
+        'Erreur lors de la simulation de la position du vehicule.',
+      );
+    }
+  }
+
   async getPositionHistory(
     vehicleId: string,
     take = 100,
@@ -225,6 +249,11 @@ export class VehicleService {
 
   private clamp(value: number, min: number, max: number): number {
     return Math.min(Math.max(value, min), max);
+  }
+
+  private randomDecimal(min: number, max: number, precision: number): number {
+    const value = Math.random() * (max - min) + min;
+    return Number(value.toFixed(precision));
   }
 
   private toVehiclePositionRecord(
