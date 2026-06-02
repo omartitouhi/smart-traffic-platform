@@ -1,0 +1,157 @@
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: smart-traffic-database
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: smart_traffic
+      POSTGRES_USER: smart_traffic
+      POSTGRES_PASSWORD: smart_traffic_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - smart_traffic_postgres_data:/var/lib/postgresql/data
+    networks:
+      - smart-traffic-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smart_traffic -d smart_traffic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    container_name: smart-traffic-auth-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
+      JWT_SECRET: local_dev_access_secret_change_me
+      JWT_REFRESH_SECRET: local_dev_refresh_secret_change_me
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CORS_ORIGIN: http://localhost:3000,http://frontend:3000,http://localhost:4000
+    ports:
+      - "3002:3000"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - smart-traffic-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/graphql', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  vehicle-service:
+    build:
+      context: ./backend/vehicle-service
+      dockerfile: Dockerfile
+    container_name: smart-traffic-vehicle-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
+    ports:
+      - "3003:3000"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - smart-traffic-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: smart-traffic-api-gateway
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      AUTH_SERVICE_GRAPHQL_URL: http://auth-service:3000/graphql
+      VEHICLE_SERVICE_GRAPHQL_URL: http://vehicle-service:3000/graphql
+      DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
+    ports:
+      - "4000:3000"
+    depends_on:
+      database:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      vehicle-service:
+        condition: service_started
+    networks:
+      - smart-traffic-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend/smart-traffic-dashboard
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_GRAPHQL_GATEWAY_URL: http://localhost:4000/graphql
+    container_name: smart-traffic-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      GRAPHQL_GATEWAY_URL: http://api-gateway:3000/graphql
+      NEXT_PUBLIC_GRAPHQL_GATEWAY_URL: http://localhost:4000/graphql
+    ports:
+      - "3000:3000"
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - smart-traffic-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+networks:
+  smart-traffic-network:
+    driver: bridge
+
+volumes:
+  smart_traffic_postgres_data:
