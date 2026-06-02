@@ -80,10 +80,7 @@ export class VehicleService {
     return vehicle;
   }
 
-  async updateVehicle(
-    id: string,
-    input: UpdateVehicleInput,
-  ): Promise<Vehicle> {
+  async updateVehicle(id: string, input: UpdateVehicleInput): Promise<Vehicle> {
     const data = this.buildUpdateData(input);
 
     if (Object.keys(data).length === 0) {
@@ -211,7 +208,9 @@ export class VehicleService {
     }
   }
 
-  private buildUpdateData(input: UpdateVehicleInput): Prisma.VehicleUpdateInput {
+  private buildUpdateData(
+    input: UpdateVehicleInput,
+  ): Prisma.VehicleUpdateInput {
     const data: Prisma.VehicleUpdateInput = {};
 
     if (input.matricule !== undefined) {
@@ -238,16 +237,14 @@ export class VehicleService {
     return Number(value.toFixed(precision));
   }
 
-  private toVehiclePositionRecord(
-    position: {
-      id: string;
-      vehicleId: string;
-      latitude: Prisma.Decimal;
-      longitude: Prisma.Decimal;
-      speed: Prisma.Decimal;
-      recordedAt: Date;
-    },
-  ): VehiclePositionRecord {
+  private toVehiclePositionRecord(position: {
+    id: string;
+    vehicleId: string;
+    latitude: Prisma.Decimal;
+    longitude: Prisma.Decimal;
+    speed: Prisma.Decimal;
+    recordedAt: Date;
+  }): VehiclePositionRecord {
     return {
       id: position.id,
       vehicleId: position.vehicleId,

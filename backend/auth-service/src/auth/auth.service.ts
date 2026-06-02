@@ -127,25 +127,19 @@ export class AuthService {
     };
     const refreshPayload: JwtRefreshPayload = { sub: user.id };
 
-    const accessToken = this.jwtService.sign(
-      accessPayload,
-      {
-        secret: process.env.JWT_SECRET,
-        // La valeur est validée en format durée dans le constructeur.
-        // Cast inévitable : @nestjs/jwt type expiresIn comme StringValue
-        // (type brandé du package ms), pas comme string.
-        expiresIn: (process.env.JWT_EXPIRES_IN ?? '15m') as unknown as number,
-      },
-    );
+    const accessToken = this.jwtService.sign(accessPayload, {
+      secret: process.env.JWT_SECRET,
+      // La valeur est validée en format durée dans le constructeur.
+      // Cast inévitable : @nestjs/jwt type expiresIn comme StringValue
+      // (type brandé du package ms), pas comme string.
+      expiresIn: (process.env.JWT_EXPIRES_IN ?? '15m') as unknown as number,
+    });
 
-    const refreshToken = this.jwtService.sign(
-      refreshPayload,
-      {
-        secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ??
-          '7d') as unknown as number,
-      },
-    );
+    const refreshToken = this.jwtService.sign(refreshPayload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ??
+        '7d') as unknown as number,
+    });
 
     return { accessToken, refreshToken };
   }
@@ -253,12 +247,9 @@ export class AuthService {
     // 1. Vérifier signature + expiry JWT
     let payload: JwtRefreshPayload;
     try {
-      payload = this.jwtService.verify<JwtRefreshPayload>(
-        input.refreshToken,
-        {
-          secret: process.env.JWT_REFRESH_SECRET,
-        },
-      );
+      payload = this.jwtService.verify<JwtRefreshPayload>(input.refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
     } catch {
       throw new UnauthorizedException('Refresh token invalide ou expiré.');
     }
@@ -314,12 +305,9 @@ export class AuthService {
   async logout(input: RefreshTokenInput): Promise<boolean> {
     let payload: JwtRefreshPayload;
     try {
-      payload = this.jwtService.verify<JwtRefreshPayload>(
-        input.refreshToken,
-        {
-          secret: process.env.JWT_REFRESH_SECRET,
-        },
-      );
+      payload = this.jwtService.verify<JwtRefreshPayload>(input.refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
     } catch {
       // Token invalide ou expiré : session déjà morte, on considère le logout réussi
       return true;
