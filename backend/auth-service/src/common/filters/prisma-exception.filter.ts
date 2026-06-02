@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { GraphQLError } from 'graphql';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma/client';
 
 type PrismaError =
   | Prisma.PrismaClientKnownRequestError
@@ -15,6 +15,12 @@ type PrismaError =
   | Prisma.PrismaClientValidationError;
 
 const SAFE_MESSAGE = 'Une erreur interne est survenue.';
+
+function isKnownRequestError(
+  exception: PrismaError,
+): exception is Prisma.PrismaClientKnownRequestError {
+  return exception instanceof Prisma.PrismaClientKnownRequestError;
+}
 
 /**
  * Filtre global qui intercepte toutes les erreurs Prisma non gérées
@@ -37,10 +43,9 @@ export class PrismaExceptionFilter implements ExceptionFilter {
 
   catch(exception: PrismaError, host: ArgumentsHost): void {
     // Log complet côté serveur pour le debugging
-    const detail =
-      exception instanceof Prisma.PrismaClientKnownRequestError
-        ? `code=${exception.code}`
-        : '';
+    const detail = isKnownRequestError(exception)
+      ? `code=${exception.code}`
+      : '';
     this.logger.error(
       `[${exception.constructor.name}] ${exception.message} ${detail}`.trim(),
     );

@@ -10,22 +10,9 @@ import {
 import { AddVehiclePositionInput } from './dto/add-vehicle-position.input';
 import { CreateVehicleInput } from './dto/create-vehicle.input';
 import { UpdateVehicleInput } from './dto/update-vehicle.input';
-
-type PrismaError = Error & {
-  code?: string;
-  meta?: Record<string, unknown>;
-};
-
-type VehicleRecord = {
-  id: string;
-  matricule: string;
-  brand: string;
-  model: string;
-  type: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../generated/prisma/client';
+import type { Vehicle } from '../generated/prisma/client';
 
 type VehiclePositionRecord = {
   id: string;
@@ -36,19 +23,14 @@ type VehiclePositionRecord = {
   recordedAt: Date;
 };
 
-type VehiclePrismaClient = {
-  vehicle: {
-    create(args: unknown): Promise<VehicleRecord>;
-    findMany(args: unknown): Promise<VehicleRecord[]>;
-    findUnique(args: unknown): Promise<VehicleRecord | null>;
-    update(args: unknown): Promise<VehicleRecord>;
-    delete(args: unknown): Promise<VehicleRecord>;
-  };
-  vehiclePosition: {
-    create(args: unknown): Promise<Record<string, unknown>>;
-    findMany(args: unknown): Promise<Record<string, unknown>[]>;
-  };
-};
+function isPrismaErrorWithCode(error: unknown): error is { code: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string'
+  );
+}
 
 @Injectable()
 export class VehicleService {
@@ -56,10 +38,10 @@ export class VehicleService {
 
   constructor(
     @Inject('PrismaService')
-    private readonly prisma: VehiclePrismaClient,
+    private readonly prisma: PrismaService,
   ) {}
 
-  async createVehicle(input: CreateVehicleInput): Promise<VehicleRecord> {
+  async createVehicle(input: CreateVehicleInput): Promise<Vehicle> {
     try {
       return await this.prisma.vehicle.create({
         data: {
@@ -75,7 +57,7 @@ export class VehicleService {
     }
   }
 
-  async getVehicles(take = 50, skip = 0): Promise<VehicleRecord[]> {
+  async getVehicles(take = 50, skip = 0): Promise<Vehicle[]> {
     const safeTake = this.clamp(take, 1, 100);
     const safeSkip = Math.max(skip, 0);
 
@@ -93,7 +75,7 @@ export class VehicleService {
     }
   }
 
-  async getVehicleById(id: string): Promise<VehicleRecord> {
+  async getVehicleById(id: string): Promise<Vehicle> {
     const vehicle = await this.findVehicleOrThrow(id);
     return vehicle;
   }
@@ -101,7 +83,7 @@ export class VehicleService {
   async updateVehicle(
     id: string,
     input: UpdateVehicleInput,
-  ): Promise<VehicleRecord> {
+  ): Promise<Vehicle> {
     const data = this.buildUpdateData(input);
 
     if (Object.keys(data).length === 0) {
@@ -212,7 +194,7 @@ export class VehicleService {
     }
   }
 
-  private async findVehicleOrThrow(id: string): Promise<VehicleRecord> {
+  private async findVehicleOrThrow(id: string): Promise<Vehicle> {
     try {
       const vehicle = await this.prisma.vehicle.findUnique({ where: { id } });
       if (!vehicle) {
@@ -229,8 +211,8 @@ export class VehicleService {
     }
   }
 
-  private buildUpdateData(input: UpdateVehicleInput): Partial<VehicleRecord> {
-    const data: Partial<VehicleRecord> = {};
+  private buildUpdateData(input: UpdateVehicleInput): Prisma.VehicleUpdateInput {
+    const data: Prisma.VehicleUpdateInput = {};
 
     if (input.matricule !== undefined) {
       data.matricule = this.normalizeMatricule(input.matricule);
@@ -257,30 +239,36 @@ export class VehicleService {
   }
 
   private toVehiclePositionRecord(
-    position: Record<string, unknown>,
+    position: {
+      id: string;
+      vehicleId: string;
+      latitude: Prisma.Decimal;
+      longitude: Prisma.Decimal;
+      speed: Prisma.Decimal;
+      recordedAt: Date;
+    },
   ): VehiclePositionRecord {
     return {
-      id: String(position.id),
-      vehicleId: String(position.vehicleId),
+      id: position.id,
+      vehicleId: position.vehicleId,
       latitude: Number(position.latitude),
       longitude: Number(position.longitude),
       speed: Number(position.speed),
-      recordedAt: position.recordedAt as Date,
+      recordedAt: position.recordedAt,
     };
   }
 
   private handlePrismaError(error: unknown, fallbackMessage: string): never {
-    const prismaError = error as PrismaError;
-
-    if (prismaError.code === 'P2002') {
+    if (isPrismaErrorWithCode(error) && error.code === 'P2002') {
       throw new ConflictException('Un vehicule avec ce matricule existe deja.');
     }
 
-    if (prismaError.code === 'P2025') {
+    if (isPrismaErrorWithCode(error) && error.code === 'P2025') {
       throw new NotFoundException('Vehicule introuvable.');
     }
 
-    this.logger.error(fallbackMessage, prismaError.stack);
+    const stack = error instanceof Error ? error.stack : undefined;
+    this.logger.error(fallbackMessage, stack);
     throw new InternalServerErrorException(fallbackMessage);
   }
 }

@@ -6,10 +6,9 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { createHash } from 'crypto';
-import { Prisma } from '@prisma/client';
-import type { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import type { User } from '../generated/prisma/client';
 import { RegisterInput } from './dto/register.input';
 import { LoginInput } from './dto/login.input';
 import { RefreshTokenInput } from './dto/refresh-token.input';
@@ -33,6 +32,29 @@ function sha256(value: string): string {
 interface TokenPair {
   accessToken: string;
   refreshToken: string;
+}
+
+interface JwtAccessPayload {
+  sub: string;
+  email: string;
+  role: User['role'];
+}
+
+interface JwtRefreshPayload {
+  sub: string;
+}
+
+interface JwtDecodedRefreshPayload extends JwtRefreshPayload {
+  exp: number;
+}
+
+function isPrismaErrorWithCode(error: unknown): error is { code: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string'
+  );
 }
 
 @Injectable()
@@ -84,7 +106,7 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: Role[user.role],
+      role: user.role as Role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -98,8 +120,15 @@ export class AuthService {
    *   - JWT_REFRESH_SECRET → refresh token (durée longue, ex: 7j)
    */
   private generateTokenPair(user: User): TokenPair {
+    const accessPayload: JwtAccessPayload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+    const refreshPayload: JwtRefreshPayload = { sub: user.id };
+
     const accessToken = this.jwtService.sign(
-      { sub: user.id, email: user.email, role: user.role },
+      accessPayload,
       {
         secret: process.env.JWT_SECRET,
         // La valeur est validée en format durée dans le constructeur.
@@ -110,7 +139,7 @@ export class AuthService {
     );
 
     const refreshToken = this.jwtService.sign(
-      { sub: user.id },
+      refreshPayload,
       {
         secret: process.env.JWT_REFRESH_SECRET,
         expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ??
@@ -135,7 +164,8 @@ export class AuthService {
     // SHA-256 avant bcrypt → évite la troncature silencieuse à 72 octets
     const hash = await bcrypt.hash(sha256(refreshToken), REFRESH_SALT_ROUNDS);
     // Lire l'expiry directement depuis le JWT signé (champ "exp" en secondes Unix)
-    const decoded = this.jwtService.decode<{ exp: number }>(refreshToken);
+    const decoded =
+      this.jwtService.decode<JwtDecodedRefreshPayload>(refreshToken);
     const expiresAt = new Date(decoded.exp * 1000);
 
     await this.prisma.user.update({
@@ -168,10 +198,7 @@ export class AuthService {
     } catch (e) {
       // P2002 = unique constraint violation → email déjà utilisé
       // Remplace la vérification pré-create non-atomique (race condition TOCTOU)
-      if (
-        e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2002'
-      ) {
+      if (isPrismaErrorWithCode(e) && e.code === 'P2002') {
         throw new ConflictException('Un compte avec cet email existe déjà.');
       }
       throw e;
@@ -224,11 +251,14 @@ export class AuthService {
    */
   async refreshTokens(input: RefreshTokenInput): Promise<AuthPayloadEntity> {
     // 1. Vérifier signature + expiry JWT
-    let payload: { sub: string };
+    let payload: JwtRefreshPayload;
     try {
-      payload = this.jwtService.verify<{ sub: string }>(input.refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
-      });
+      payload = this.jwtService.verify<JwtRefreshPayload>(
+        input.refreshToken,
+        {
+          secret: process.env.JWT_REFRESH_SECRET,
+        },
+      );
     } catch {
       throw new UnauthorizedException('Refresh token invalide ou expiré.');
     }
@@ -282,11 +312,14 @@ export class AuthService {
    *   2. Nettoie le hash en base
    */
   async logout(input: RefreshTokenInput): Promise<boolean> {
-    let payload: { sub: string };
+    let payload: JwtRefreshPayload;
     try {
-      payload = this.jwtService.verify<{ sub: string }>(input.refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
-      });
+      payload = this.jwtService.verify<JwtRefreshPayload>(
+        input.refreshToken,
+        {
+          secret: process.env.JWT_REFRESH_SECRET,
+        },
+      );
     } catch {
       // Token invalide ou expiré : session déjà morte, on considère le logout réussi
       return true;

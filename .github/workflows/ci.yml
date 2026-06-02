@@ -80,6 +80,13 @@ jobs:
         working-directory: ${{ matrix.app.path }}
         run: npm ci
 
+      - name: Generate Prisma client if needed
+        working-directory: ${{ matrix.app.path }}
+        run: |
+          if [ -f prisma/schema.prisma ]; then
+            npx prisma generate
+          fi
+
       - name: Run ${{ matrix.app.name }} lint
         working-directory: ${{ matrix.app.path }}
         run: ${{ matrix.app.command }}

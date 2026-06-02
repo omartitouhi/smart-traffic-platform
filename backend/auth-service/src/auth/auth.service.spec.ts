@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { validate } from 'class-validator';
-import { Prisma } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { LoginInput } from './dto/login.input';
 import { RegisterInput } from './dto/register.input';
@@ -28,6 +27,10 @@ type JwtMock = {
   decode: jest.Mock;
   verify: jest.Mock;
 };
+
+function prismaKnownRequestError(code: string): Error & { code: string } {
+  return Object.assign(new Error('Prisma known request error'), { code });
+}
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -151,12 +154,7 @@ describe('AuthService', () => {
   });
 
   it('should throw ConflictException when registering an existing email', async () => {
-    prisma.user.create.mockRejectedValue(
-      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: 'test',
-      }),
-    );
+    prisma.user.create.mockRejectedValue(prismaKnownRequestError('P2002'));
 
     await expect(
       service.register({
