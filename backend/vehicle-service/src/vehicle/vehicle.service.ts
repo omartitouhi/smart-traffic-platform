@@ -11,8 +11,8 @@ import { AddVehiclePositionInput } from './dto/add-vehicle-position.input';
 import { CreateVehicleInput } from './dto/create-vehicle.input';
 import { UpdateVehicleInput } from './dto/update-vehicle.input';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '../generated/prisma/client';
-import type { Vehicle } from '../generated/prisma/client';
+import { Prisma } from '@prisma/client';
+import type { Vehicle } from '@prisma/client';
 
 type VehiclePositionRecord = {
   id: string;

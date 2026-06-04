@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import type { User } from '../generated/prisma/client';
+import type { User } from '@prisma/client';
 import { RegisterInput } from './dto/register.input';
 import { LoginInput } from './dto/login.input';
 import { RefreshTokenInput } from './dto/refresh-token.input';
