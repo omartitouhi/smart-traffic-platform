@@ -82,6 +82,35 @@ services:
       timeout: 5s
       retries: 10
 
+  traffic-service:
+    build:
+      context: ./backend/traffic-service
+      dockerfile: Dockerfile
+    container_name: smart-traffic-traffic-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
+    ports:
+      - "3004:3000"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - smart-traffic-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/graphql', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
   api-gateway:
     build:
       context: ./backend/api-gateway
@@ -93,6 +122,7 @@ services:
       PORT: 3000
       AUTH_SERVICE_GRAPHQL_URL: http://auth-service:3000/graphql
       VEHICLE_SERVICE_GRAPHQL_URL: http://vehicle-service:3000/graphql
+      TRAFFIC_SERVICE_GRAPHQL_URL: http://traffic-service:3000/graphql
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
       CORS_ORIGIN: http://localhost:3000
     ports:
@@ -103,6 +133,8 @@ services:
       auth-service:
         condition: service_started
       vehicle-service:
+        condition: service_started
+      traffic-service:
         condition: service_started
     networks:
       - smart-traffic-network

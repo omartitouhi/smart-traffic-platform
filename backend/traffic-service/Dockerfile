@@ -22,6 +22,8 @@ COPY prisma ./prisma
 COPY prisma.config.ts ./prisma.config.ts
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/src/generated ./src/generated
+COPY --from=build /app/src/generated ./dist/src/generated
 
 EXPOSE 3000
 CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]

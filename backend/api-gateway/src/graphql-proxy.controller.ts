@@ -33,13 +33,23 @@ const VEHICLE_OPERATIONS = new Set([
   'vehicles',
 ]);
 
+const TRAFFIC_OPERATIONS = new Set([
+  'congestedZones',
+  'createTrafficZone',
+  'deleteTrafficZone',
+  'trafficZone',
+  'trafficZones',
+  'updateTrafficDensity',
+  'updateTrafficZone',
+]);
+
 @Controller('graphql')
 export class GraphQLProxyController {
   @Post()
   @HttpCode(200)
   async proxy(
-    @Body() body: GraphQLRequestBody,
-    @Headers('authorization') authorization?: string,
+      @Body() body: GraphQLRequestBody,
+      @Headers('authorization') authorization?: string,
   ) {
     const targetUrl = this.resolveTargetUrl(body);
 
@@ -67,20 +77,24 @@ export class GraphQLProxyController {
       return this.getRequiredEnv('VEHICLE_SERVICE_GRAPHQL_URL');
     }
 
+    if (TRAFFIC_OPERATIONS.has(operation)) {
+      return this.getRequiredEnv('TRAFFIC_SERVICE_GRAPHQL_URL');
+    }
+
     throw new InternalServerErrorException(
-      `Operation GraphQL non routee par l API Gateway: ${operation || 'inconnue'}.`,
+        `Operation GraphQL non routee par l API Gateway: ${operation || 'inconnue'}.`,
     );
   }
 
   private extractOperation(body: GraphQLRequestBody): string {
     if (body.operationName) {
       return (
-        body.operationName.charAt(0).toLowerCase() + body.operationName.slice(1)
+          body.operationName.charAt(0).toLowerCase() + body.operationName.slice(1)
       );
     }
 
     const match = body.query?.match(
-      /\b(?:query|mutation)\s+\w+[\s\S]*?\{\s*(\w+)/,
+        /\b(?:query|mutation)\s+\w+[\s\S]*?\{\s*(\w+)/,
     );
     if (match?.[1]) return match[1];
 
@@ -92,7 +106,7 @@ export class GraphQLProxyController {
     const value = process.env[name];
     if (!value) {
       throw new InternalServerErrorException(
-        `Variable d environnement manquante: ${name}.`,
+          `Variable d environnement manquante: ${name}.`,
       );
     }
 
