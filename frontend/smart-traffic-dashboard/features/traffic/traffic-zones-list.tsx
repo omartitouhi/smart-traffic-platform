@@ -21,6 +21,7 @@ import { TableSkeleton } from "@/components/ui/loader";
 import { Modal } from "@/components/ui/modal";
 import { Table, TablePagination } from "@/components/ui/table";
 import { notify } from "@/components/ui/toast";
+import { InteractiveMap } from "@/components/map/interactive-map";
 import type { TrafficZone } from "@/types/traffic";
 
 type TrafficZonesQueryResult = {
@@ -158,6 +159,11 @@ export function TrafficZonesList() {
           Actualiser
         </Button>
       </div>
+
+      <InteractiveMap
+        title="Carte trafic"
+        description="Zones de circulation, niveaux de densite et vehicules avec positions GPS recentes."
+      />
 
       {loading ? <TableSkeleton rows={6} /> : null}
 

@@ -49,3 +49,22 @@ a,
 input {
   -webkit-tap-highlight-color: transparent;
 }
+
+.leaflet-container {
+  background: #f4f4f5;
+  color: #18181b;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.leaflet-control-zoom a {
+  color: #18181b;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  border-radius: 0;
+}
+
+.leaflet-popup-content {
+  margin: 12px;
+}

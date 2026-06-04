@@ -14,6 +14,7 @@ import { useAuth } from "@/features/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
+import { InteractiveMap } from "@/components/map/interactive-map";
 
 const navigationCards = [
   {
@@ -137,6 +138,11 @@ export function DashboardHome() {
             })}
           </div>
         </section>
+
+        <InteractiveMap
+          title="Carte interactive"
+          description="Vue urbaine des vehicules localises et des zones de circulation."
+        />
       </div>
   );
 }

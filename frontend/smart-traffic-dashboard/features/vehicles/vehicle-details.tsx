@@ -15,6 +15,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { notify } from "@/components/ui/toast";
+import { InteractiveMap } from "@/components/map/interactive-map";
 import type { Vehicle, VehiclePosition } from "@/types/vehicle";
 
 type VehicleDetailsProps = {
@@ -46,6 +47,7 @@ export function VehicleDetails({ vehicleId }: VehicleDetailsProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle",
   );
+  const [mapRefreshKey, setMapRefreshKey] = useState(0);
   const { data, loading, error, refetch } = useQuery<VehicleQueryResult>(
     VEHICLE_QUERY,
     {
@@ -71,6 +73,7 @@ export function VehicleDetails({ vehicleId }: VehicleDetailsProps) {
         },
       });
       await refetch();
+      setMapRefreshKey((current) => current + 1);
       setStatus("success");
       notify.success("Position GPS simulee ajoutee.");
     } catch (simulationError) {
@@ -179,6 +182,13 @@ export function VehicleDetails({ vehicleId }: VehicleDetailsProps) {
         <DetailItem label="Type" value={vehicle.type} />
         <DetailItem label="Mis a jour le" value={formatDate(vehicle.updatedAt)} />
       </div>
+
+      <InteractiveMap
+        title="Position du vehicule"
+        description="Derniere position GPS connue du vehicule et contexte des zones de circulation."
+        vehicleId={vehicle.id}
+        refreshKey={mapRefreshKey}
+      />
 
       <Modal
         open={isDeleteOpen}

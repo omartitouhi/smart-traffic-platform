@@ -86,6 +86,10 @@ vi.mock("@/components/ui/toast", () => ({
   ToastViewport: () => null,
 }));
 
+vi.mock("@/components/map/interactive-map", () => ({
+  InteractiveMap: () => null,
+}));
+
 vi.mock("@apollo/client/react", () => ({
   useQuery: (...args: unknown[]) => mocks.useQuery(...args),
   useMutation: (...args: unknown[]) => mocks.useMutation(...args),
