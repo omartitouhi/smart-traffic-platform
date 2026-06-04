@@ -16,6 +16,7 @@ type NotificationRecord = {
 
 type PrismaMock = {
   notification: {
+    count: jest.Mock;
     create: jest.Mock;
     delete: jest.Mock;
     findMany: jest.Mock;
@@ -48,12 +49,14 @@ describe('NotificationService', () => {
     | 'emitNotificationCreated'
     | 'emitNotificationDeleted'
     | 'emitNotificationRead'
+    | 'emitUnreadCount'
   >;
   let service: NotificationService;
 
   beforeEach(() => {
     prisma = {
       notification: {
+        count: jest.fn(),
         create: jest.fn(),
         delete: jest.fn(),
         findMany: jest.fn(),
@@ -66,6 +69,7 @@ describe('NotificationService', () => {
       emitNotificationCreated: jest.fn(),
       emitNotificationDeleted: jest.fn(),
       emitNotificationRead: jest.fn(),
+      emitUnreadCount: jest.fn(),
     };
     service = new NotificationService(
       prisma as never,
@@ -76,6 +80,7 @@ describe('NotificationService', () => {
   it('creates a notification and emits websocket event', async () => {
     const notification = createNotification();
     prisma.notification.create.mockResolvedValue(notification);
+    prisma.notification.count.mockResolvedValue(1);
 
     const result = await service.createNotification({
       title: ' Traffic alert ',
@@ -93,6 +98,10 @@ describe('NotificationService', () => {
       },
     });
     expect(gateway.emitNotificationCreated).toHaveBeenCalledWith(result);
+    expect(gateway.emitUnreadCount).toHaveBeenCalledWith(
+      notification.userId,
+      1,
+    );
     expect(result).toMatchObject({
       id: notification.id,
       isRead: false,
@@ -103,6 +112,7 @@ describe('NotificationService', () => {
   it('keeps sendNotification as an alias for createNotification', async () => {
     const notification = createNotification();
     prisma.notification.create.mockResolvedValue(notification);
+    prisma.notification.count.mockResolvedValue(1);
 
     const result = await service.sendNotification({
       title: 'Traffic alert',
@@ -113,6 +123,10 @@ describe('NotificationService', () => {
 
     expect(result.id).toBe(notification.id);
     expect(gateway.emitNotificationCreated).toHaveBeenCalledWith(result);
+    expect(gateway.emitUnreadCount).toHaveBeenCalledWith(
+      notification.userId,
+      1,
+    );
   });
 
   it('gets notifications ordered for a user', async () => {
@@ -159,6 +173,7 @@ describe('NotificationService', () => {
     const readNotification = createNotification({ isRead: true });
     prisma.notification.findFirst.mockResolvedValue(notification);
     prisma.notification.update.mockResolvedValue(readNotification);
+    prisma.notification.count.mockResolvedValue(0);
 
     const result = await service.markAsRead({
       id: notification.id,
@@ -170,6 +185,10 @@ describe('NotificationService', () => {
       data: { isRead: true },
     });
     expect(gateway.emitNotificationRead).toHaveBeenCalledWith(result);
+    expect(gateway.emitUnreadCount).toHaveBeenCalledWith(
+      notification.userId,
+      0,
+    );
     expect(result.isRead).toBe(true);
   });
 
@@ -189,6 +208,7 @@ describe('NotificationService', () => {
       .mockResolvedValueOnce([notification, secondNotification])
       .mockResolvedValueOnce(readNotifications);
     prisma.notification.updateMany.mockResolvedValue({ count: 2 });
+    prisma.notification.count.mockResolvedValue(0);
 
     const result = await service.markAllAsRead({
       userId: notification.userId,
@@ -202,6 +222,10 @@ describe('NotificationService', () => {
       data: { isRead: true },
     });
     expect(gateway.emitNotificationRead).toHaveBeenCalledTimes(2);
+    expect(gateway.emitUnreadCount).toHaveBeenCalledWith(
+      notification.userId,
+      0,
+    );
     expect(result).toHaveLength(2);
     expect(result.every((item) => item.isRead)).toBe(true);
   });
@@ -210,6 +234,7 @@ describe('NotificationService', () => {
     const notification = createNotification();
     prisma.notification.findFirst.mockResolvedValue(notification);
     prisma.notification.delete.mockResolvedValue(notification);
+    prisma.notification.count.mockResolvedValue(0);
 
     const result = await service.deleteNotification({
       id: notification.id,
@@ -221,6 +246,10 @@ describe('NotificationService', () => {
     });
     expect(gateway.emitNotificationDeleted).toHaveBeenCalledWith(
       expect.objectContaining({ id: notification.id }),
+    );
+    expect(gateway.emitUnreadCount).toHaveBeenCalledWith(
+      notification.userId,
+      0,
     );
     expect(result).toBe(true);
   });

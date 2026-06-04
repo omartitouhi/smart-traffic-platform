@@ -4,6 +4,7 @@ import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -23,15 +24,21 @@ type ClientToServerEvents = {
 };
 
 type ServerToClientEvents = {
-  'notification.created': (notification: NotificationEntity) => void;
+  'notification:new': (notification: NotificationEntity) => void;
   'notification.deleted': (notification: NotificationEntity) => void;
-  'notification.read': (notification: NotificationEntity) => void;
+  'notification:read': (notification: NotificationEntity) => void;
+  'notification:unreadCount': (payload: UnreadCountPayload) => void;
 };
 
 type InterServerEvents = Record<string, never>;
 
 type SocketData = {
   userId?: string;
+};
+
+type UnreadCountPayload = {
+  userId?: string;
+  count: number;
 };
 
 type NotificationServer = Server<
@@ -57,7 +64,9 @@ type NotificationSocket = Socket<
     credentials: true,
   },
 })
-export class NotificationGateway implements OnGatewayConnection {
+export class NotificationGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(NotificationGateway.name);
 
   @WebSocketServer()
@@ -69,7 +78,12 @@ export class NotificationGateway implements OnGatewayConnection {
     const token = this.extractToken(client);
     const secret = process.env.JWT_SECRET;
 
-    if (!secret || !token) {
+    if (!token) {
+      this.logger.log(`Client notifications connecte sans utilisateur.`);
+      return;
+    }
+
+    if (!secret) {
       client.disconnect(true);
       return;
     }
@@ -84,6 +98,15 @@ export class NotificationGateway implements OnGatewayConnection {
     } catch {
       client.disconnect(true);
     }
+  }
+
+  handleDisconnect(client: NotificationSocket): void {
+    const userId = client.data.userId;
+    this.logger.log(
+      userId
+        ? `Client notifications deconnecte: ${userId}`
+        : 'Client notifications deconnecte sans utilisateur.',
+    );
   }
 
   @SubscribeMessage('notifications.join')
@@ -101,9 +124,14 @@ export class NotificationGateway implements OnGatewayConnection {
   }
 
   emitNotificationCreated(notification: NotificationEntity): void {
-    this.server
-      .to(this.userRoom(notification.userId))
-      .emit('notification.created', notification);
+    if (notification.userId) {
+      this.server
+        .to(this.userRoom(notification.userId))
+        .emit('notification:new', notification);
+      return;
+    }
+
+    this.server.emit('notification:new', notification);
   }
 
   emitNotificationDeleted(notification: NotificationEntity): void {
@@ -113,9 +141,30 @@ export class NotificationGateway implements OnGatewayConnection {
   }
 
   emitNotificationRead(notification: NotificationEntity): void {
-    this.server
-      .to(this.userRoom(notification.userId))
-      .emit('notification.read', notification);
+    if (notification.userId) {
+      this.server
+        .to(this.userRoom(notification.userId))
+        .emit('notification:read', notification);
+      return;
+    }
+
+    this.server.emit('notification:read', notification);
+  }
+
+  emitUnreadCount(userId: string | undefined, count: number): void {
+    const payload = {
+      userId,
+      count,
+    };
+
+    if (userId) {
+      this.server
+        .to(this.userRoom(userId))
+        .emit('notification:unreadCount', payload);
+      return;
+    }
+
+    this.server.emit('notification:unreadCount', payload);
   }
 
   private extractToken(client: NotificationSocket): string | null {

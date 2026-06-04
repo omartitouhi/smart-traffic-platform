@@ -47,6 +47,7 @@ export class NotificationService {
       });
       const entity = this.toNotificationEntity(notification);
       this.notificationGateway.emitNotificationCreated(entity);
+      await this.emitUnreadCountForUser(entity.userId);
       return entity;
     } catch (error) {
       this.handlePrismaError(
@@ -115,6 +116,7 @@ export class NotificationService {
       });
       const entity = this.toNotificationEntity(updatedNotification);
       this.notificationGateway.emitNotificationRead(entity);
+      await this.emitUnreadCountForUser(entity.userId);
       return entity;
     } catch (error) {
       this.handlePrismaError(
@@ -169,6 +171,7 @@ export class NotificationService {
       entities.forEach((notification) => {
         this.notificationGateway.emitNotificationRead(notification);
       });
+      await this.emitUnreadCountForUser(input.userId);
 
       return entities;
     } catch (error) {
@@ -189,6 +192,7 @@ export class NotificationService {
       this.notificationGateway.emitNotificationDeleted(
         this.toNotificationEntity(deletedNotification),
       );
+      await this.emitUnreadCountForUser(input.userId);
       return true;
     } catch (error) {
       this.handlePrismaError(
@@ -236,6 +240,13 @@ export class NotificationService {
       createdAt: notification.createdAt,
       updatedAt: notification.updatedAt,
     };
+  }
+
+  private async emitUnreadCountForUser(userId: string): Promise<void> {
+    const count = await this.prisma.notification.count({
+      where: { userId, isRead: false },
+    });
+    this.notificationGateway.emitUnreadCount(userId, count);
   }
 
   private handlePrismaError(error: unknown, fallbackMessage: string): never {
