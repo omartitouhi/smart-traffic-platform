@@ -14,6 +14,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import type { Vehicle } from '@prisma/client';
 
+// Bounding box couvrant la zone du Grand Tunis, Tunisie
+const GRAND_TUNIS_BOUNDS = {
+  latMin: 36.70,
+  latMax: 36.95,
+  lngMin: 10.05,
+  lngMax: 10.35,
+};
+
 type VehiclePositionRecord = {
   id: string;
   vehicleId: string;
@@ -147,8 +155,8 @@ export class VehicleService {
       const position = await this.prisma.vehiclePosition.create({
         data: {
           vehicleId,
-          latitude: this.randomDecimal(-90, 90, 6),
-          longitude: this.randomDecimal(-180, 180, 6),
+          latitude: this.randomDecimal(GRAND_TUNIS_BOUNDS.latMin, GRAND_TUNIS_BOUNDS.latMax, 6),
+          longitude: this.randomDecimal(GRAND_TUNIS_BOUNDS.lngMin, GRAND_TUNIS_BOUNDS.lngMax, 6),
           speed: this.randomDecimal(0, 300, 2),
         },
       });

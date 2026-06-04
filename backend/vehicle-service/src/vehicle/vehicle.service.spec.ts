@@ -229,7 +229,7 @@ describe('VehicleService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('should simulate a GPS position', async () => {
+  it('should simulate a GPS position within Grand Tunis bounds', async () => {
     jest
       .spyOn(Math, 'random')
       .mockReturnValueOnce(0.5)
@@ -241,14 +241,18 @@ describe('VehicleService', () => {
     const result = await service.simulateVehiclePosition(vehicle.id);
 
     expect(result).toEqual(position);
-    expect(prisma.vehiclePosition.create).toHaveBeenCalledWith({
-      data: {
-        vehicleId: vehicle.id,
-        latitude: 0,
-        longitude: 0,
-        speed: 150,
-      },
-    });
+    const createCall = prisma.vehiclePosition.create.mock.calls[0][0].data;
+    expect(createCall.vehicleId).toBe(vehicle.id);
+    // latitude doit etre dans la zone du Grand Tunis
+    expect(createCall.latitude).toBeGreaterThanOrEqual(36.70);
+    expect(createCall.latitude).toBeLessThanOrEqual(36.95);
+    // longitude doit etre dans la zone du Grand Tunis
+    expect(createCall.longitude).toBeGreaterThanOrEqual(10.05);
+    expect(createCall.longitude).toBeLessThanOrEqual(10.35);
+    // valeurs exactes avec Math.random() = 0.5
+    expect(createCall.latitude).toBeCloseTo(36.825, 3);
+    expect(createCall.longitude).toBeCloseTo(10.2, 3);
+    expect(createCall.speed).toBe(150);
   });
 
   it('should get GPS position history', async () => {
