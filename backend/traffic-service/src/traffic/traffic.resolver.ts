@@ -12,7 +12,8 @@ import {
 } from '@nestjs/graphql';
 import { CongestionLevel } from '../generated/prisma/client';
 import { CreateTrafficZoneInput } from './dto/create-traffic-zone.input';
-import { MeasureTrafficDensityInput } from './dto/measure-traffic-density.input';
+import { UpdateTrafficDensityInput } from './dto/update-traffic-density.input';
+import { UpdateTrafficZoneInput } from './dto/update-traffic-zone.input';
 import { TrafficService } from './traffic.service';
 
 registerEnumType(CongestionLevel, {
@@ -70,27 +71,42 @@ export class TrafficResolver {
 
   @Query(() => TrafficZoneEntity)
   trafficZone(
-    @Args('id', { type: () => ID }) id: string,
+      @Args('id', { type: () => ID }) id: string,
   ): Promise<TrafficZoneEntity> {
     return this.trafficService.getTrafficZoneById(id);
   }
 
   @Query(() => [TrafficZoneEntity])
-  congestedTrafficZones(): Promise<TrafficZoneEntity[]> {
-    return this.trafficService.getCongestedTrafficZones();
+  congestedZones(): Promise<TrafficZoneEntity[]> {
+    return this.trafficService.getCongestedZones();
   }
 
   @Mutation(() => TrafficZoneEntity)
   createTrafficZone(
-    @Args('input') input: CreateTrafficZoneInput,
+      @Args('input') input: CreateTrafficZoneInput,
   ): Promise<TrafficZoneEntity> {
     return this.trafficService.createTrafficZone(input);
   }
 
   @Mutation(() => TrafficZoneEntity)
-  measureTrafficDensity(
-    @Args('input') input: MeasureTrafficDensityInput,
+  updateTrafficZone(
+      @Args('id', { type: () => ID }) id: string,
+      @Args('input') input: UpdateTrafficZoneInput,
   ): Promise<TrafficZoneEntity> {
-    return this.trafficService.measureTrafficDensity(input);
+    return this.trafficService.updateTrafficZone(id, input);
+  }
+
+  @Mutation(() => TrafficZoneEntity)
+  updateTrafficDensity(
+      @Args('input') input: UpdateTrafficDensityInput,
+  ): Promise<TrafficZoneEntity> {
+    return this.trafficService.updateTrafficDensity(input);
+  }
+
+  @Mutation(() => Boolean)
+  deleteTrafficZone(
+      @Args('id', { type: () => ID }) id: string,
+  ): Promise<boolean> {
+    return this.trafficService.deleteTrafficZone(id);
   }
 }
