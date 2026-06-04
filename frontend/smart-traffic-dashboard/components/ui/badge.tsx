@@ -16,13 +16,13 @@ const toneClass = {
 
 export function Badge({ children, tone = "default", className }: BadgeProps) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center border px-2.5 py-1 text-xs font-semibold",
-        toneClass[tone],
-        className,
-      )}
-    >
+      <span
+          className={cn(
+              "inline-flex items-center border px-2.5 py-1 text-xs font-semibold",
+              toneClass[tone],
+              className,
+          )}
+      >
       {children}
     </span>
   );
@@ -33,5 +33,12 @@ export function vehicleStatusTone(status: string): BadgeProps["tone"] {
   if (["active", "available", "online", "ok"].includes(normalized)) return "success";
   if (["maintenance", "pending"].includes(normalized)) return "warning";
   if (["inactive", "disabled", "offline"].includes(normalized)) return "danger";
+  return "default";
+}
+
+export function congestionLevelTone(level: string): BadgeProps["tone"] {
+  if (level === "LOW") return "success";
+  if (level === "MEDIUM") return "warning";
+  if (level === "HIGH") return "danger";
   return "default";
 }
