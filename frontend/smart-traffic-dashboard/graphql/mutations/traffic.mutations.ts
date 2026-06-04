@@ -12,7 +12,7 @@ export const CREATE_TRAFFIC_ZONE_MUTATION = gql`
 
 export const UPDATE_TRAFFIC_ZONE_MUTATION = gql`
   ${TRAFFIC_ZONE_FIELDS_FRAGMENT}
-  mutation UpdateTrafficZone($id: String!, $input: UpdateTrafficZoneInput!) {
+  mutation UpdateTrafficZone($id: ID!, $input: UpdateTrafficZoneInput!) {
     updateTrafficZone(id: $id, input: $input) {
       ...TrafficZoneFields
     }
@@ -29,7 +29,7 @@ export const UPDATE_TRAFFIC_DENSITY_MUTATION = gql`
 `;
 
 export const DELETE_TRAFFIC_ZONE_MUTATION = gql`
-  mutation DeleteTrafficZone($id: String!) {
+  mutation DeleteTrafficZone($id: ID!) {
     deleteTrafficZone(id: $id)
   }
 `;

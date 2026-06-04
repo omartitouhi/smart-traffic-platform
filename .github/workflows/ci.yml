@@ -30,6 +30,8 @@ jobs:
             path: backend/auth-service
           - name: vehicle-service
             path: backend/vehicle-service
+          - name: traffic-service
+            path: backend/traffic-service
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -64,6 +66,9 @@ jobs:
             command: npx eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
           - name: vehicle-service
             path: backend/vehicle-service
+            command: npx eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
+          - name: traffic-service
+            path: backend/traffic-service
             command: npx eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
     steps:
       - name: Checkout repository
@@ -111,6 +116,9 @@ jobs:
           - name: vehicle-service
             path: backend/vehicle-service
             command: npm test -- --runInBand
+          - name: traffic-service
+            path: backend/traffic-service
+            command: npm test -- --runInBand
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -153,6 +161,8 @@ jobs:
             path: backend/auth-service
           - name: vehicle-service
             path: backend/vehicle-service
+          - name: traffic-service
+            path: backend/traffic-service
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

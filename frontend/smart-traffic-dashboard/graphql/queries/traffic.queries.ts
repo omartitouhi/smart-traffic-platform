@@ -12,7 +12,7 @@ export const TRAFFIC_ZONES_QUERY = gql`
 
 export const TRAFFIC_ZONE_QUERY = gql`
   ${TRAFFIC_ZONE_FIELDS_FRAGMENT}
-  query TrafficZone($id: String!) {
+  query TrafficZone($id: ID!) {
     trafficZone(id: $id) {
       ...TrafficZoneFields
     }
