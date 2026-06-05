@@ -1,0 +1,329 @@
+# Smart Traffic Platform - GraphQL operations
+# Endpoint principal frontend: http://localhost:4000/graphql
+# Ajouter le header suivant pour les operations protegees:
+# Authorization: Bearer <accessToken>
+
+fragment UserFields on UserEntity {
+  id
+  email
+  firstName
+  lastName
+  role
+  createdAt
+  updatedAt
+}
+
+fragment AuthPayloadFields on AuthPayloadEntity {
+  accessToken
+  refreshToken
+  user {
+    ...UserFields
+  }
+}
+
+fragment VehicleFields on VehicleEntity {
+  id
+  matricule
+  brand
+  model
+  type
+  status
+  createdAt
+  updatedAt
+}
+
+fragment VehiclePositionFields on VehiclePositionEntity {
+  id
+  vehicleId
+  latitude
+  longitude
+  speed
+  recordedAt
+}
+
+fragment TrafficZoneFields on TrafficZoneEntity {
+  id
+  name
+  description
+  latitude
+  longitude
+  radius
+  vehicleCount
+  density
+  congestionLevel
+  isCongested
+  createdAt
+  updatedAt
+}
+
+fragment NotificationFields on NotificationEntity {
+  id
+  title
+  message
+  type
+  isRead
+  userId
+  createdAt
+  updatedAt
+}
+
+fragment IncidentFields on IncidentEntity {
+  id
+  title
+  description
+  type
+  status
+  latitude
+  longitude
+  address
+  createdAt
+  updatedAt
+}
+
+# -----------------------------------------------------------------------------
+# Auth
+# -----------------------------------------------------------------------------
+
+mutation Register($input: RegisterInput!) {
+  register(input: $input) {
+    ...AuthPayloadFields
+  }
+}
+
+mutation Login($input: LoginInput!) {
+  login(input: $input) {
+    ...AuthPayloadFields
+  }
+}
+
+mutation RefreshToken($input: RefreshTokenInput!) {
+  refreshToken(input: $input) {
+    ...AuthPayloadFields
+  }
+}
+
+mutation Logout($input: RefreshTokenInput!) {
+  logout(input: $input)
+}
+
+query Me {
+  me {
+    ...UserFields
+  }
+}
+
+query Users($take: Int = 50, $skip: Int = 0) {
+  users(take: $take, skip: $skip) {
+    ...UserFields
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Vehicle
+# -----------------------------------------------------------------------------
+
+query Vehicles {
+  vehicles {
+    ...VehicleFields
+  }
+}
+
+query Vehicle($id: ID!) {
+  vehicle(id: $id) {
+    ...VehicleFields
+  }
+}
+
+query VehiclePositions($vehicleId: ID!) {
+  vehiclePositions(vehicleId: $vehicleId) {
+    ...VehiclePositionFields
+  }
+}
+
+mutation CreateVehicle($input: CreateVehicleInput!) {
+  createVehicle(input: $input) {
+    ...VehicleFields
+  }
+}
+
+mutation UpdateVehicle($id: ID!, $input: UpdateVehicleInput!) {
+  updateVehicle(id: $id, input: $input) {
+    ...VehicleFields
+  }
+}
+
+mutation DeleteVehicle($id: ID!) {
+  deleteVehicle(id: $id)
+}
+
+mutation AddVehiclePosition($input: AddVehiclePositionInput!) {
+  addVehiclePosition(input: $input) {
+    ...VehiclePositionFields
+  }
+}
+
+mutation SimulateVehiclePosition($vehicleId: ID!) {
+  simulateVehiclePosition(vehicleId: $vehicleId) {
+    ...VehiclePositionFields
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Traffic
+# -----------------------------------------------------------------------------
+
+query TrafficZones {
+  trafficZones {
+    ...TrafficZoneFields
+  }
+}
+
+query TrafficZone($id: ID!) {
+  trafficZone(id: $id) {
+    ...TrafficZoneFields
+  }
+}
+
+query CongestedZones {
+  congestedZones {
+    ...TrafficZoneFields
+  }
+}
+
+mutation CreateTrafficZone($input: CreateTrafficZoneInput!) {
+  createTrafficZone(input: $input) {
+    ...TrafficZoneFields
+  }
+}
+
+mutation UpdateTrafficZone($id: ID!, $input: UpdateTrafficZoneInput!) {
+  updateTrafficZone(id: $id, input: $input) {
+    ...TrafficZoneFields
+  }
+}
+
+mutation UpdateTrafficDensity($input: UpdateTrafficDensityInput!) {
+  updateTrafficDensity(input: $input) {
+    ...TrafficZoneFields
+  }
+}
+
+mutation MeasureTrafficDensity($input: MeasureTrafficDensityInput!) {
+  measureTrafficDensity(input: $input) {
+    ...TrafficZoneFields
+  }
+}
+
+mutation DeleteTrafficZone($id: ID!) {
+  deleteTrafficZone(id: $id)
+}
+
+# -----------------------------------------------------------------------------
+# Notification
+# -----------------------------------------------------------------------------
+
+query Notifications($input: NotificationsQueryInput!) {
+  notifications(input: $input) {
+    ...NotificationFields
+  }
+}
+
+query UnreadNotifications($input: NotificationsQueryInput!) {
+  unreadNotifications(input: $input) {
+    ...NotificationFields
+  }
+}
+
+query UnreadNotificationCount($input: NotificationUserInput!) {
+  unreadNotificationCount(input: $input)
+}
+
+mutation CreateNotification($input: CreateNotificationInput!) {
+  createNotification(input: $input) {
+    ...NotificationFields
+  }
+}
+
+mutation CreateNotificationFromEvent($input: CreateDomainNotificationEventInput!) {
+  createNotificationFromEvent(input: $input) {
+    ...NotificationFields
+  }
+}
+
+mutation SendNotification($input: CreateNotificationInput!) {
+  sendNotification(input: $input) {
+    ...NotificationFields
+  }
+}
+
+mutation MarkAsRead($input: MarkNotificationReadInput!) {
+  markAsRead(input: $input) {
+    ...NotificationFields
+  }
+}
+
+mutation MarkNotificationAsRead($input: MarkNotificationReadInput!) {
+  markNotificationAsRead(input: $input) {
+    ...NotificationFields
+  }
+}
+
+mutation MarkAllAsRead($input: MarkAllNotificationsReadInput!) {
+  markAllAsRead(input: $input) {
+    ...NotificationFields
+  }
+}
+
+mutation MarkAllNotificationsAsRead($input: MarkAllNotificationsReadInput!) {
+  markAllNotificationsAsRead(input: $input) {
+    ...NotificationFields
+  }
+}
+
+mutation DeleteNotification($input: DeleteNotificationInput!) {
+  deleteNotification(input: $input)
+}
+
+# -----------------------------------------------------------------------------
+# Incident
+# -----------------------------------------------------------------------------
+
+query Incidents {
+  incidents {
+    ...IncidentFields
+  }
+}
+
+query Incident($id: ID!) {
+  incident(id: $id) {
+    ...IncidentFields
+  }
+}
+
+query IncidentsByStatus($status: IncidentStatus!) {
+  incidentsByStatus(status: $status) {
+    ...IncidentFields
+  }
+}
+
+mutation DeclareIncident($input: CreateIncidentInput!) {
+  declareIncident(input: $input) {
+    ...IncidentFields
+  }
+}
+
+mutation UpdateIncident($id: ID!, $input: UpdateIncidentInput!) {
+  updateIncident(id: $id, input: $input) {
+    ...IncidentFields
+  }
+}
+
+mutation UpdateIncidentStatus($input: UpdateIncidentStatusInput!) {
+  updateIncidentStatus(input: $input) {
+    ...IncidentFields
+  }
+}
+
+mutation DeleteIncident($id: ID!) {
+  deleteIncident(id: $id)
+}

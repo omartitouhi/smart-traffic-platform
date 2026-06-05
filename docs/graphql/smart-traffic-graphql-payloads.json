@@ -1,0 +1,223 @@
+{
+  "endpoint": "http://localhost:4000/graphql",
+  "headers": {
+    "Authorization": "Bearer <accessToken>"
+  },
+  "ids": {
+    "userId": "11111111-1111-4111-8111-111111111111",
+    "vehicleId": "22222222-2222-4222-8222-222222222222",
+    "trafficZoneId": "33333333-3333-4333-8333-333333333333",
+    "notificationId": "44444444-4444-4444-8444-444444444444",
+    "incidentId": "55555555-5555-4555-8555-555555555555"
+  },
+  "auth": {
+    "Register": {
+      "input": {
+        "email": "operator@example.com",
+        "password": "Password123!",
+        "firstName": "Test",
+        "lastName": "Operator"
+      }
+    },
+    "Login": {
+      "input": {
+        "email": "operator@example.com",
+        "password": "Password123!"
+      }
+    },
+    "RefreshToken": {
+      "input": {
+        "refreshToken": "<refreshToken>"
+      }
+    },
+    "Logout": {
+      "input": {
+        "refreshToken": "<refreshToken>"
+      }
+    },
+    "Users": {
+      "take": 50,
+      "skip": 0
+    }
+  },
+  "vehicle": {
+    "Vehicle": {
+      "id": "22222222-2222-4222-8222-222222222222"
+    },
+    "VehiclePositions": {
+      "vehicleId": "22222222-2222-4222-8222-222222222222"
+    },
+    "CreateVehicle": {
+      "input": {
+        "matricule": "TN-2026-001",
+        "brand": "Renault",
+        "model": "Clio",
+        "type": "CAR",
+        "status": "ACTIVE"
+      }
+    },
+    "UpdateVehicle": {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "input": {
+        "status": "MAINTENANCE"
+      }
+    },
+    "DeleteVehicle": {
+      "id": "22222222-2222-4222-8222-222222222222"
+    },
+    "AddVehiclePosition": {
+      "input": {
+        "vehicleId": "22222222-2222-4222-8222-222222222222",
+        "latitude": 36.8065,
+        "longitude": 10.1815,
+        "speed": 42.5
+      }
+    },
+    "SimulateVehiclePosition": {
+      "vehicleId": "22222222-2222-4222-8222-222222222222"
+    }
+  },
+  "traffic": {
+    "TrafficZone": {
+      "id": "33333333-3333-4333-8333-333333333333"
+    },
+    "CreateTrafficZone": {
+      "input": {
+        "name": "Centre-ville Tunis",
+        "description": "Zone de surveillance du trafic au centre-ville.",
+        "latitude": 36.8065,
+        "longitude": 10.1815,
+        "radius": 1200,
+        "vehicleCount": 25
+      }
+    },
+    "UpdateTrafficZone": {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "input": {
+        "description": "Zone mise a jour.",
+        "radius": 1500,
+        "vehicleCount": 45
+      }
+    },
+    "UpdateTrafficDensity": {
+      "input": {
+        "zoneId": "33333333-3333-4333-8333-333333333333",
+        "vehicleCount": 75
+      }
+    },
+    "MeasureTrafficDensity": {
+      "input": {
+        "zoneId": "33333333-3333-4333-8333-333333333333",
+        "vehicleCount": 90
+      }
+    },
+    "DeleteTrafficZone": {
+      "id": "33333333-3333-4333-8333-333333333333"
+    }
+  },
+  "notification": {
+    "Notifications": {
+      "input": {
+        "isRead": false,
+        "take": 20,
+        "skip": 0
+      }
+    },
+    "UnreadNotifications": {
+      "input": {
+        "take": 20,
+        "skip": 0
+      }
+    },
+    "UnreadNotificationCount": {
+      "input": {}
+    },
+    "CreateNotification": {
+      "input": {
+        "title": "Information plateforme",
+        "message": "Message administratif de test.",
+        "type": "INFO",
+        "userId": "11111111-1111-4111-8111-111111111111"
+      }
+    },
+    "CreateGlobalNotification": {
+      "input": {
+        "title": "Alerte globale",
+        "message": "Notification visible globalement.",
+        "type": "WARNING"
+      }
+    },
+    "CreateNotificationFromEvent": {
+      "input": {
+        "eventType": "TRAFFIC_ZONE_HIGH",
+        "resourceId": "33333333-3333-4333-8333-333333333333",
+        "resourceName": "Centre-ville Tunis",
+        "density": 92.5,
+        "vehicleCount": 90
+      }
+    },
+    "SendNotification": {
+      "input": {
+        "title": "Incident important",
+        "message": "Un incident vient d'etre signale.",
+        "type": "INCIDENT_ALERT",
+        "userId": "11111111-1111-4111-8111-111111111111"
+      }
+    },
+    "MarkAsRead": {
+      "input": {
+        "id": "44444444-4444-4444-8444-444444444444"
+      }
+    },
+    "MarkNotificationAsRead": {
+      "input": {
+        "id": "44444444-4444-4444-8444-444444444444"
+      }
+    },
+    "MarkAllAsRead": {
+      "input": {}
+    },
+    "MarkAllNotificationsAsRead": {
+      "input": {}
+    },
+    "DeleteNotification": {
+      "input": {
+        "id": "44444444-4444-4444-8444-444444444444"
+      }
+    }
+  },
+  "incident": {
+    "Incident": {
+      "id": "55555555-5555-4555-8555-555555555555"
+    },
+    "IncidentsByStatus": {
+      "status": "SIGNALE"
+    },
+    "DeclareIncident": {
+      "input": {
+        "title": "Accident avenue Habib Bourguiba",
+        "description": "Collision signalee avec ralentissement important.",
+        "type": "ACCIDENT",
+        "latitude": 36.8008,
+        "longitude": 10.1847,
+        "address": "Avenue Habib Bourguiba, Tunis"
+      }
+    },
+    "UpdateIncident": {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "input": {
+        "description": "Incident confirme par un operateur.",
+        "address": "Avenue Habib Bourguiba, Tunis"
+      }
+    },
+    "UpdateIncidentStatus": {
+      "input": {
+        "id": "55555555-5555-4555-8555-555555555555",
+        "status": "EN_COURS"
+      }
+    },
+    "DeleteIncident": {
+      "id": "55555555-5555-4555-8555-555555555555"
+    }
+  }
+}
