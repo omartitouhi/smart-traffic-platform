@@ -1,8 +1,9 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CreateNotificationInput } from './dto/create-notification.input';
 import { DeleteNotificationInput } from './dto/delete-notification.input';
 import { MarkAllNotificationsReadInput } from './dto/mark-all-notifications-read.input';
 import { MarkNotificationReadInput } from './dto/mark-notification-read.input';
+import { NotificationUserInput } from './dto/notification-user.input';
 import { NotificationsQueryInput } from './dto/notifications-query.input';
 import { NotificationEntity } from './entities/notification.entity';
 import { NotificationService } from './notification.service';
@@ -23,6 +24,13 @@ export class NotificationResolver {
     @Args('input') input: NotificationsQueryInput,
   ): Promise<NotificationEntity[]> {
     return this.notificationService.getUnreadNotifications(input);
+  }
+
+  @Query(() => Int)
+  unreadNotificationCount(
+    @Args('input') input: NotificationUserInput,
+  ): Promise<number> {
+    return this.notificationService.getUnreadNotificationCount(input);
   }
 
   @Mutation(() => NotificationEntity)
@@ -55,6 +63,13 @@ export class NotificationResolver {
 
   @Mutation(() => [NotificationEntity])
   markAllAsRead(
+    @Args('input') input: MarkAllNotificationsReadInput,
+  ): Promise<NotificationEntity[]> {
+    return this.notificationService.markAllAsRead(input);
+  }
+
+  @Mutation(() => [NotificationEntity])
+  markAllNotificationsAsRead(
     @Args('input') input: MarkAllNotificationsReadInput,
   ): Promise<NotificationEntity[]> {
     return this.notificationService.markAllAsRead(input);

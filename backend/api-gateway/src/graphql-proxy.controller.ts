@@ -43,27 +43,50 @@ const TRAFFIC_OPERATIONS = new Set([
   'updateTrafficZone',
 ]);
 
+const NOTIFICATION_OPERATIONS = new Set([
+  'createNotification',
+  'deleteNotification',
+  'markAllAsRead',
+  'markAllNotificationsAsRead',
+  'markAsRead',
+  'markNotificationAsRead',
+  'notifications',
+  'sendNotification',
+  'unreadNotificationCount',
+  'unreadNotifications',
+]);
+
 @Controller('graphql')
 export class GraphQLProxyController {
   @Post()
   @HttpCode(200)
   async proxy(
-      @Body() body: GraphQLRequestBody,
-      @Headers('authorization') authorization?: string,
+    @Body() body: GraphQLRequestBody,
+    @Headers('authorization') authorization?: string,
   ) {
     const targetUrl = this.resolveTargetUrl(body);
 
-    const response = await fetch(targetUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(authorization ? { Authorization: authorization } : {}),
-      },
-      body: JSON.stringify(body),
-    });
+    try {
+      const response = await fetch(targetUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authorization ? { Authorization: authorization } : {}),
+        },
+        body: JSON.stringify(body),
+      });
 
-    const payload = (await response.json()) as unknown;
-    return payload;
+      const responseText = await response.text();
+      if (!responseText) return {};
+
+      return JSON.parse(responseText) as unknown;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'erreur inconnue';
+      throw new InternalServerErrorException(
+        `Erreur de communication avec le service GraphQL cible: ${message}.`,
+      );
+    }
   }
 
   private resolveTargetUrl(body: GraphQLRequestBody): string {
@@ -81,20 +104,24 @@ export class GraphQLProxyController {
       return this.getRequiredEnv('TRAFFIC_SERVICE_GRAPHQL_URL');
     }
 
+    if (NOTIFICATION_OPERATIONS.has(operation)) {
+      return this.getRequiredEnv('NOTIFICATION_SERVICE_GRAPHQL_URL');
+    }
+
     throw new InternalServerErrorException(
-        `Operation GraphQL non routee par l API Gateway: ${operation || 'inconnue'}.`,
+      `Operation GraphQL non routee par l API Gateway: ${operation || 'inconnue'}.`,
     );
   }
 
   private extractOperation(body: GraphQLRequestBody): string {
     if (body.operationName) {
       return (
-          body.operationName.charAt(0).toLowerCase() + body.operationName.slice(1)
+        body.operationName.charAt(0).toLowerCase() + body.operationName.slice(1)
       );
     }
 
     const match = body.query?.match(
-        /\b(?:query|mutation)\s+\w+[\s\S]*?\{\s*(\w+)/,
+      /\b(?:query|mutation)\s+\w+[\s\S]*?\{\s*(\w+)/,
     );
     if (match?.[1]) return match[1];
 
@@ -106,7 +133,7 @@ export class GraphQLProxyController {
     const value = process.env[name];
     if (!value) {
       throw new InternalServerErrorException(
-          `Variable d environnement manquante: ${name}.`,
+        `Variable d environnement manquante: ${name}.`,
       );
     }
 

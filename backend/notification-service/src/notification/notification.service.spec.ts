@@ -168,6 +168,20 @@ describe('NotificationService', () => {
     expect(result).toHaveLength(1);
   });
 
+  it('gets unread notification count for a user', async () => {
+    const notification = createNotification();
+    prisma.notification.count.mockResolvedValue(3);
+
+    const result = await service.getUnreadNotificationCount({
+      userId: notification.userId,
+    });
+
+    expect(prisma.notification.count).toHaveBeenCalledWith({
+      where: { userId: notification.userId, isRead: false },
+    });
+    expect(result).toBe(3);
+  });
+
   it('marks a notification as read and emits websocket event', async () => {
     const notification = createNotification();
     const readNotification = createNotification({ isRead: true });

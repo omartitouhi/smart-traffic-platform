@@ -11,6 +11,7 @@ import { CreateNotificationInput } from './dto/create-notification.input';
 import { DeleteNotificationInput } from './dto/delete-notification.input';
 import { MarkAllNotificationsReadInput } from './dto/mark-all-notifications-read.input';
 import { MarkNotificationReadInput } from './dto/mark-notification-read.input';
+import { NotificationUserInput } from './dto/notification-user.input';
 import { NotificationsQueryInput } from './dto/notifications-query.input';
 import type { NotificationEntity } from './entities/notification.entity';
 import { NotificationGateway } from './notification.gateway';
@@ -95,6 +96,21 @@ export class NotificationService {
     input: NotificationsQueryInput,
   ): Promise<NotificationEntity[]> {
     return this.getNotifications({ ...input, isRead: false });
+  }
+
+  async getUnreadNotificationCount(
+    input: NotificationUserInput,
+  ): Promise<number> {
+    try {
+      return await this.prisma.notification.count({
+        where: { userId: input.userId, isRead: false },
+      });
+    } catch (error) {
+      this.handlePrismaError(
+        error,
+        'Erreur lors du comptage des notifications non lues.',
+      );
+    }
   }
 
   async markAsRead(
