@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './common/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TrafficModule } from './traffic/traffic.module';
 
@@ -17,7 +18,9 @@ const isProd = process.env.NODE_ENV === 'production';
       sortSchema: true,
       introspection: !isProd,
       playground: !isProd,
+      context: ({ req }: { req: Request }) => ({ req }),
     }),
+    AuthModule,
     PrismaModule,
     TrafficModule,
   ],

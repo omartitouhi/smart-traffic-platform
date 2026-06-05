@@ -8,6 +8,11 @@ import {
   Query,
   Resolver,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import { Roles } from '../common/auth/decorators/roles.decorator';
+import { GqlJwtAuthGuard } from '../common/auth/guards/gql-jwt-auth.guard';
+import { RolesGuard } from '../common/auth/guards/roles.guard';
+import { Role } from '../common/enums/role.enum';
 import { AddVehiclePositionInput } from './dto/add-vehicle-position.input';
 import { CreateVehicleInput } from './dto/create-vehicle.input';
 import { UpdateVehicleInput } from './dto/update-vehicle.input';
@@ -62,6 +67,8 @@ class VehiclePositionEntity {
 }
 
 @Resolver(() => VehicleEntity)
+@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN, Role.OPERATOR)
 export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
 
@@ -98,6 +105,7 @@ export class VehicleResolver {
   }
 
   @Mutation(() => Boolean)
+  @Roles(Role.ADMIN)
   deleteVehicle(@Args('id', { type: () => ID }) id: string): Promise<boolean> {
     return this.vehicleService.deleteVehicle(id);
   }

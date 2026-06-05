@@ -1,5 +1,10 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IncidentStatus } from '@prisma/client';
+import { Roles } from '../common/auth/decorators/roles.decorator';
+import { GqlJwtAuthGuard } from '../common/auth/guards/gql-jwt-auth.guard';
+import { RolesGuard } from '../common/auth/guards/roles.guard';
+import { Role } from '../common/enums/role.enum';
 import { CreateIncidentInput } from './dto/create-incident.input';
 import { UpdateIncidentInput } from './dto/update-incident.input';
 import { UpdateIncidentStatusInput } from './dto/update-incident-status.input';
@@ -7,6 +12,8 @@ import { IncidentEntity } from './entities/incident.entity';
 import { IncidentService } from './incident.service';
 
 @Resolver(() => IncidentEntity)
+@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN, Role.OPERATOR)
 export class IncidentResolver {
   constructor(private readonly incidentService: IncidentService) {}
 
@@ -52,6 +59,7 @@ export class IncidentResolver {
   }
 
   @Mutation(() => Boolean)
+  @Roles(Role.ADMIN)
   deleteIncident(@Args('id', { type: () => ID }) id: string): Promise<boolean> {
     return this.incidentService.deleteIncident(id);
   }

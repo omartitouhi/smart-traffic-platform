@@ -10,6 +10,11 @@ import {
   registerEnumType,
   Resolver,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import { Roles } from '../common/auth/decorators/roles.decorator';
+import { GqlJwtAuthGuard } from '../common/auth/guards/gql-jwt-auth.guard';
+import { RolesGuard } from '../common/auth/guards/roles.guard';
+import { Role } from '../common/enums/role.enum';
 import { CongestionLevel } from '../generated/prisma/client';
 import { CreateTrafficZoneInput } from './dto/create-traffic-zone.input';
 import { UpdateTrafficDensityInput } from './dto/update-traffic-density.input';
@@ -61,6 +66,8 @@ class TrafficZoneEntity {
 }
 
 @Resolver(() => TrafficZoneEntity)
+@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN, Role.OPERATOR)
 export class TrafficResolver {
   constructor(private readonly trafficService: TrafficService) {}
 
@@ -104,6 +111,7 @@ export class TrafficResolver {
   }
 
   @Mutation(() => Boolean)
+  @Roles(Role.ADMIN)
   deleteTrafficZone(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
