@@ -28,6 +28,15 @@ export const UPDATE_TRAFFIC_DENSITY_MUTATION = gql`
   }
 `;
 
+export const MEASURE_TRAFFIC_DENSITY_MUTATION = gql`
+  ${TRAFFIC_ZONE_FIELDS_FRAGMENT}
+  mutation MeasureTrafficDensity($input: MeasureTrafficDensityInput!) {
+    measureTrafficDensity(input: $input) {
+      ...TrafficZoneFields
+    }
+  }
+`;
+
 export const DELETE_TRAFFIC_ZONE_MUTATION = gql`
   mutation DeleteTrafficZone($id: ID!) {
     deleteTrafficZone(id: $id)

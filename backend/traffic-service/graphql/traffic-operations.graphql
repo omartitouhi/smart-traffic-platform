@@ -1,0 +1,23 @@
+mutation MeasureTrafficDensity($input: MeasureTrafficDensityInput!) {
+  measureTrafficDensity(input: $input) {
+    id
+    name
+    vehicleCount
+    density
+    congestionLevel
+    isCongested
+    updatedAt
+  }
+}
+
+mutation UpdateTrafficDensity($input: UpdateTrafficDensityInput!) {
+  updateTrafficDensity(input: $input) {
+    id
+    name
+    vehicleCount
+    density
+    congestionLevel
+    isCongested
+    updatedAt
+  }
+}

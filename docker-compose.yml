@@ -63,6 +63,7 @@ services:
       NODE_ENV: production
       PORT: 3000
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
+      JWT_SECRET: local_dev_access_secret_change_me
     ports:
       - "3003:3000"
     depends_on:

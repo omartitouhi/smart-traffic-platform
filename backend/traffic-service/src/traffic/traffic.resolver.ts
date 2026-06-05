@@ -17,6 +17,7 @@ import { RolesGuard } from '../common/auth/guards/roles.guard';
 import { Role } from '../common/enums/role.enum';
 import { CongestionLevel } from '../generated/prisma/client';
 import { CreateTrafficZoneInput } from './dto/create-traffic-zone.input';
+import { MeasureTrafficDensityInput } from './dto/measure-traffic-density.input';
 import { UpdateTrafficDensityInput } from './dto/update-traffic-density.input';
 import { UpdateTrafficZoneInput } from './dto/update-traffic-zone.input';
 import { TrafficService } from './traffic.service';
@@ -108,6 +109,13 @@ export class TrafficResolver {
     @Args('input') input: UpdateTrafficDensityInput,
   ): Promise<TrafficZoneEntity> {
     return this.trafficService.updateTrafficDensity(input);
+  }
+
+  @Mutation(() => TrafficZoneEntity)
+  measureTrafficDensity(
+    @Args('input') input: MeasureTrafficDensityInput,
+  ): Promise<TrafficZoneEntity> {
+    return this.trafficService.measureTrafficDensity(input);
   }
 
   @Mutation(() => Boolean)

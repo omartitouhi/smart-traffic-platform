@@ -1,0 +1,14 @@
+{
+  "measureTrafficDensity": {
+    "input": {
+      "zoneId": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11",
+      "vehicleCount": 160
+    }
+  },
+  "updateTrafficDensity": {
+    "input": {
+      "zoneId": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11",
+      "vehicleCount": 160
+    }
+  }
+}

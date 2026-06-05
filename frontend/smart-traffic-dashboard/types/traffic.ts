@@ -30,3 +30,5 @@ export type UpdateTrafficDensityInput = {
   zoneId: string;
   vehicleCount: number;
 };
+
+export type MeasureTrafficDensityInput = UpdateTrafficDensityInput;

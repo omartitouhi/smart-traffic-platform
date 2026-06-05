@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useState } from "react";
-import { UPDATE_TRAFFIC_DENSITY_MUTATION } from "@/graphql/mutations/traffic.mutations";
+import { MEASURE_TRAFFIC_DENSITY_MUTATION } from "@/graphql/mutations/traffic.mutations";
 import { TRAFFIC_ZONE_QUERY } from "@/graphql/queries/traffic.queries";
 import { Badge, congestionLevelTone } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/components/ui/toast";
-import type { TrafficZone, UpdateTrafficDensityInput } from "@/types/traffic";
+import type { MeasureTrafficDensityInput, TrafficZone } from "@/types/traffic";
 
 type TrafficZoneDetailsProps = {
   zoneId: string;
@@ -31,8 +31,8 @@ type TrafficZoneQueryResult = {
   trafficZone: TrafficZone;
 };
 
-type UpdateTrafficDensityResult = {
-  updateTrafficDensity: TrafficZone;
+type MeasureTrafficDensityResult = {
+  measureTrafficDensity: TrafficZone;
 };
 
 function formatDate(value: string) {
@@ -78,10 +78,10 @@ export function TrafficZoneDetails({ zoneId }: TrafficZoneDetailsProps) {
       variables: { id: zoneId },
     },
   );
-  const [updateTrafficDensity] = useMutation<
-    UpdateTrafficDensityResult,
-    { input: UpdateTrafficDensityInput }
-  >(UPDATE_TRAFFIC_DENSITY_MUTATION);
+  const [measureTrafficDensity] = useMutation<
+    MeasureTrafficDensityResult,
+    { input: MeasureTrafficDensityInput }
+  >(MEASURE_TRAFFIC_DENSITY_MUTATION);
 
   async function handleUpdateDensity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,7 +95,7 @@ export function TrafficZoneDetails({ zoneId }: TrafficZoneDetailsProps) {
     setStatus("loading");
 
     try {
-      const result = await updateTrafficDensity({
+      const result = await measureTrafficDensity({
         variables: {
           input: {
             zoneId,
@@ -106,7 +106,7 @@ export function TrafficZoneDetails({ zoneId }: TrafficZoneDetailsProps) {
       await refetch();
       setVehicleCount(
         result.data
-          ? String(result.data.updateTrafficDensity.vehicleCount)
+          ? String(result.data.measureTrafficDensity.vehicleCount)
           : undefined,
       );
       setStatus("success");
