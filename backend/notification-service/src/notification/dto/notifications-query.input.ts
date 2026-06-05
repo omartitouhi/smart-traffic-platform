@@ -10,11 +10,12 @@ import {
 
 @InputType()
 export class NotificationsQueryInput {
-  @Field(() => ID)
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
   @IsUUID('4', {
     message: 'L identifiant utilisateur doit etre un UUID valide.',
   })
-  userId!: string;
+  userId?: string;
 
   @Field(() => Boolean, { nullable: true })
   @IsOptional()

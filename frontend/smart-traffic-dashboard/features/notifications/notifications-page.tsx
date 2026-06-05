@@ -78,20 +78,17 @@ export function NotificationsPage() {
   const variables = useMemo(
     () => ({
       input: {
-        userId: user?.id ?? "",
         take: 100,
         skip: 0,
       },
     }),
-    [user?.id],
+    [],
   );
   const countVariables = useMemo(
     () => ({
-      input: {
-        userId: user?.id ?? "",
-      },
+      input: {},
     }),
-    [user?.id],
+    [],
   );
 
   const { data, loading, error, refetch } = useQuery<
@@ -156,7 +153,6 @@ export function NotificationsPage() {
         variables: {
           input: {
             id: notification.id,
-            userId: user.id,
           },
         },
       });
@@ -177,9 +173,7 @@ export function NotificationsPage() {
     try {
       await markAllAsRead({
         variables: {
-          input: {
-            userId: user.id,
-          },
+          input: {},
         },
       });
       await refresh();
@@ -201,7 +195,6 @@ export function NotificationsPage() {
         variables: {
           input: {
             id: notificationToDelete.id,
-            userId: user.id,
           },
         },
       });

@@ -49,20 +49,17 @@ export function NotificationBell({ className }: { className?: string }) {
   const variables = useMemo(
     () => ({
       input: {
-        userId: user?.id ?? "",
         take: 5,
         skip: 0,
       },
     }),
-    [user?.id],
+    [],
   );
   const countVariables = useMemo(
     () => ({
-      input: {
-        userId: user?.id ?? "",
-      },
+      input: {},
     }),
-    [user?.id],
+    [],
   );
 
   const {
@@ -127,7 +124,6 @@ export function NotificationBell({ className }: { className?: string }) {
         variables: {
           input: {
             id: notification.id,
-            userId: user.id,
           },
         },
       });
@@ -147,9 +143,7 @@ export function NotificationBell({ className }: { className?: string }) {
     try {
       await markAllAsRead({
         variables: {
-          input: {
-            userId: user.id,
-          },
+          input: {},
         },
       });
       await refreshNotifications();

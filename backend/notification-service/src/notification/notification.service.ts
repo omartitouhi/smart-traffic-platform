@@ -24,6 +24,27 @@ import { NotificationsQueryInput } from './dto/notifications-query.input';
 import type { NotificationEntity } from './entities/notification.entity';
 import { NotificationGateway } from './notification.gateway';
 
+type AuthenticatedNotificationsQueryInput = NotificationsQueryInput & {
+  userId: string;
+};
+
+type AuthenticatedNotificationUserInput = NotificationUserInput & {
+  userId: string;
+};
+
+type AuthenticatedMarkNotificationReadInput = MarkNotificationReadInput & {
+  userId: string;
+};
+
+type AuthenticatedMarkAllNotificationsReadInput =
+  MarkAllNotificationsReadInput & {
+    userId: string;
+  };
+
+type AuthenticatedDeleteNotificationInput = DeleteNotificationInput & {
+  userId: string;
+};
+
 function isPrismaErrorWithCode(error: unknown): error is { code: string } {
   return (
     typeof error === 'object' &&
@@ -73,7 +94,7 @@ export class NotificationService {
   }
 
   async getNotifications(
-    input: NotificationsQueryInput,
+    input: AuthenticatedNotificationsQueryInput,
   ): Promise<NotificationEntity[]> {
     const take = this.clamp(input.take ?? 50, 1, 100);
     const skip = Math.max(input.skip ?? 0, 0);
@@ -101,13 +122,13 @@ export class NotificationService {
   }
 
   async getUnreadNotifications(
-    input: NotificationsQueryInput,
+    input: AuthenticatedNotificationsQueryInput,
   ): Promise<NotificationEntity[]> {
     return this.getNotifications({ ...input, isRead: false });
   }
 
   async getUnreadNotificationCount(
-    input: NotificationUserInput,
+    input: AuthenticatedNotificationUserInput,
   ): Promise<number> {
     try {
       return await this.prisma.notification.count({
@@ -125,7 +146,7 @@ export class NotificationService {
   }
 
   async markAsRead(
-    input: MarkNotificationReadInput,
+    input: AuthenticatedMarkNotificationReadInput,
   ): Promise<NotificationEntity> {
     const notification = await this.findNotificationForUserOrThrow(
       input.id,
@@ -154,13 +175,13 @@ export class NotificationService {
   }
 
   async markNotificationAsRead(
-    input: MarkNotificationReadInput,
+    input: AuthenticatedMarkNotificationReadInput,
   ): Promise<NotificationEntity> {
     return this.markAsRead(input);
   }
 
   async markAllAsRead(
-    input: MarkAllNotificationsReadInput,
+    input: AuthenticatedMarkAllNotificationsReadInput,
   ): Promise<NotificationEntity[]> {
     try {
       const unreadNotifications = await this.prisma.notification.findMany({
@@ -212,7 +233,9 @@ export class NotificationService {
     }
   }
 
-  async deleteNotification(input: DeleteNotificationInput): Promise<boolean> {
+  async deleteNotification(
+    input: AuthenticatedDeleteNotificationInput,
+  ): Promise<boolean> {
     await this.findNotificationForUserOrThrow(input.id, input.userId);
 
     try {

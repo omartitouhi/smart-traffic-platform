@@ -18,19 +18,19 @@ export type AppNotification = {
 };
 
 export type NotificationsQueryInput = {
-  userId: string;
+  userId?: string;
   isRead?: boolean;
   take?: number;
   skip?: number;
 };
 
 export type NotificationUserInput = {
-  userId: string;
+  userId?: string;
 };
 
 export type MarkNotificationReadInput = {
   id: string;
-  userId: string;
+  userId?: string;
 };
 
 export type DeleteNotificationInput = MarkNotificationReadInput;
