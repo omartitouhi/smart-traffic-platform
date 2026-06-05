@@ -22,6 +22,15 @@ type PrismaMock = {
   };
 };
 
+type VehiclePositionCreateArgs = {
+  data: {
+    vehicleId: string;
+    latitude: number;
+    longitude: number;
+    speed: number;
+  };
+};
+
 describe('VehicleService', () => {
   let service: VehicleService;
   let prisma: PrismaMock;
@@ -241,10 +250,13 @@ describe('VehicleService', () => {
     const result = await service.simulateVehiclePosition(vehicle.id);
 
     expect(result).toEqual(position);
-    const createCall = prisma.vehiclePosition.create.mock.calls[0][0].data;
+    const createCalls = prisma.vehiclePosition.create.mock.calls as [
+      VehiclePositionCreateArgs,
+    ][];
+    const createCall = createCalls[0][0].data;
     expect(createCall.vehicleId).toBe(vehicle.id);
     // latitude doit etre dans la zone du Grand Tunis
-    expect(createCall.latitude).toBeGreaterThanOrEqual(36.70);
+    expect(createCall.latitude).toBeGreaterThanOrEqual(36.7);
     expect(createCall.latitude).toBeLessThanOrEqual(36.95);
     // longitude doit etre dans la zone du Grand Tunis
     expect(createCall.longitude).toBeGreaterThanOrEqual(10.05);
