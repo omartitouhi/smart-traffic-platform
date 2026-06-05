@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { IncidentModule } from './incident/incident.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -18,6 +19,7 @@ const isProd = process.env.NODE_ENV === 'production';
       playground: !isProd,
     }),
     PrismaModule,
+    IncidentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
