@@ -1,0 +1,435 @@
+{
+  "info": {
+    "_postman_id": "e34f7f22-0f6e-4ef7-9db7-smarttrafficapi",
+    "name": "Smart Traffic Platform - API Gateway GraphQL",
+    "description": "Collection Postman pour tester Smart Traffic Platform via l'API Gateway GraphQL uniquement: {{gatewayUrl}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Register($input: RegisterInput!) {\n  register(input: $input) {\n    accessToken\n    refreshToken\n    user {\n      id\n      email\n      firstName\n      lastName\n      role\n    }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"email\": \"operator@example.com\",\n    \"password\": \"Password123!\",\n    \"firstName\": \"Test\",\n    \"lastName\": \"Operator\"\n  }\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.data?.login?.accessToken;",
+                  "pm.test('login returns accessToken', function () {",
+                  "  pm.expect(token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "if (token) {",
+                  "  pm.environment.set('accessToken', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Login($input: LoginInput!) {\n  login(input: $input) {\n    accessToken\n    refreshToken\n    user {\n      id\n      email\n      firstName\n      lastName\n      role\n    }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"email\": \"operator@example.com\",\n    \"password\": \"Password123!\"\n  }\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Me {\n  me {\n    id\n    email\n    firstName\n    lastName\n    role\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicle",
+      "item": [
+        {
+          "name": "createVehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.createVehicle?.id;",
+                  "if (id) {",
+                  "  pm.environment.set('vehicleId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateVehicle($input: CreateVehicleInput!) {\n  createVehicle(input: $input) {\n    id\n    matricule\n    brand\n    model\n    type\n    status\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"matricule\": \"TN-2026-001\",\n    \"brand\": \"Renault\",\n    \"model\": \"Clio\",\n    \"type\": \"CAR\",\n    \"status\": \"ACTIVE\"\n  }\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "simulateVehiclePosition",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation SimulateVehiclePosition($vehicleId: ID!) {\n  simulateVehiclePosition(vehicleId: $vehicleId) {\n    id\n    vehicleId\n    latitude\n    longitude\n    speed\n    recordedAt\n  }\n}",
+                "variables": "{\n  \"vehicleId\": \"{{vehicleId}}\"\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Traffic",
+      "item": [
+        {
+          "name": "createTrafficZone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.createTrafficZone?.id;",
+                  "if (id) {",
+                  "  pm.environment.set('trafficZoneId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateTrafficZone($input: CreateTrafficZoneInput!) {\n  createTrafficZone(input: $input) {\n    id\n    name\n    description\n    latitude\n    longitude\n    radius\n    vehicleCount\n    density\n    congestionLevel\n    isCongested\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"name\": \"Centre-ville Tunis\",\n    \"description\": \"Zone de surveillance du trafic au centre-ville.\",\n    \"latitude\": 36.8065,\n    \"longitude\": 10.1815,\n    \"radius\": 1200,\n    \"vehicleCount\": 25\n  }\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "updateTrafficDensity",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateTrafficDensity($input: UpdateTrafficDensityInput!) {\n  updateTrafficDensity(input: $input) {\n    id\n    name\n    vehicleCount\n    density\n    congestionLevel\n    isCongested\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"zoneId\": \"{{trafficZoneId}}\",\n    \"vehicleCount\": 75\n  }\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Incident",
+      "item": [
+        {
+          "name": "declareIncident",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.declareIncident?.id;",
+                  "if (id) {",
+                  "  pm.environment.set('incidentId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeclareIncident($input: CreateIncidentInput!) {\n  declareIncident(input: $input) {\n    id\n    title\n    description\n    type\n    status\n    latitude\n    longitude\n    address\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"title\": \"Accident avenue Habib Bourguiba\",\n    \"description\": \"Collision signalee avec ralentissement important.\",\n    \"type\": \"ACCIDENT\",\n    \"latitude\": 36.8008,\n    \"longitude\": 10.1847,\n    \"address\": \"Avenue Habib Bourguiba, Tunis\"\n  }\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "updateIncidentStatus",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateIncidentStatus($input: UpdateIncidentStatusInput!) {\n  updateIncidentStatus(input: $input) {\n    id\n    title\n    status\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"id\": \"{{incidentId}}\",\n    \"status\": \"EN_COURS\"\n  }\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notification",
+      "item": [
+        {
+          "name": "notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const firstId = json?.data?.notifications?.[0]?.id;",
+                  "if (firstId) {",
+                  "  pm.environment.set('notificationId', firstId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Notifications($input: NotificationsQueryInput!) {\n  notifications(input: $input) {\n    id\n    title\n    message\n    type\n    isRead\n    userId\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"take\": 20,\n    \"skip\": 0\n  }\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "markNotificationAsRead",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewayUrl}}",
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation MarkNotificationAsRead($input: MarkNotificationReadInput!) {\n  markNotificationAsRead(input: $input) {\n    id\n    title\n    isRead\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"id\": \"{{notificationId}}\"\n  }\n}"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "gatewayUrl",
+      "value": "http://localhost:4000/graphql",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
