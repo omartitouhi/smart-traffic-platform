@@ -7,6 +7,7 @@ import {
   ChevronRight,
   LayoutDashboard,
   LogOut,
+  Siren,
   TrafficCone,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -17,6 +18,7 @@ const navigationItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vehicles", label: "Vehicles", icon: Car },
   { href: "/traffic", label: "Traffic", icon: TrafficCone },
+  { href: "/incidents", label: "Incidents", icon: Siren },
   { href: "/notifications", label: "Notifications", icon: Bell },
 ];
 
