@@ -1,0 +1,49 @@
+sequenceDiagram
+  autonumber
+  actor User as Utilisateur
+  participant FE as Frontend Next.js
+  participant GW as API Gateway GraphQL
+  participant Auth as Auth Service
+  participant DB as PostgreSQL
+
+  rect rgb(238, 248, 255)
+    User->>FE: Remplit le formulaire d'inscription
+    FE->>GW: mutation register(input)
+    GW->>Auth: Forward register(input)
+    Auth->>DB: Recherche email existant
+    alt Email deja utilise
+      DB-->>Auth: User existant
+      Auth-->>GW: ConflictException
+      GW-->>FE: Erreur GraphQL
+      FE-->>User: Affiche l'erreur
+    else Email disponible
+      Auth->>Auth: Hash du mot de passe
+      Auth->>DB: Creation User role OPERATOR
+      Auth->>Auth: Generation accessToken + refreshToken
+      Auth->>DB: Stockage hash du refresh token
+      Auth-->>GW: AuthPayload
+      GW-->>FE: AuthPayload
+      FE->>FE: Stockage session/token
+      FE-->>User: Redirection tableau de bord
+    end
+  end
+
+  rect rgb(245, 255, 245)
+    User->>FE: Remplit le formulaire de connexion
+    FE->>GW: mutation login(input)
+    GW->>Auth: Forward login(input)
+    Auth->>DB: Recherche User par email
+    alt Identifiants invalides
+      Auth-->>GW: UnauthorizedException
+      GW-->>FE: Erreur GraphQL
+      FE-->>User: Affiche l'erreur
+    else Identifiants valides
+      Auth->>Auth: Verification mot de passe
+      Auth->>Auth: Generation accessToken + refreshToken
+      Auth->>DB: Mise a jour hash refresh token
+      Auth-->>GW: AuthPayload
+      GW-->>FE: AuthPayload
+      FE->>FE: Stockage session/token
+      FE-->>User: Acces autorise
+    end
+  end

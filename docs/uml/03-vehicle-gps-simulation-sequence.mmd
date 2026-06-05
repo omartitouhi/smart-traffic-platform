@@ -1,0 +1,33 @@
+sequenceDiagram
+  autonumber
+  actor Operator as Operateur
+  participant FE as Frontend Next.js
+  participant GW as API Gateway GraphQL
+  participant Guard as GqlJwtAuthGuard
+  participant Vehicle as Vehicle Service
+  participant DB as PostgreSQL
+
+  Operator->>FE: Clique sur simulation GPS
+  FE->>GW: mutation simulateVehiclePosition(vehicleId)\nAuthorization: Bearer JWT
+  GW->>Vehicle: Forward mutation + Authorization
+  Vehicle->>Guard: Validation JWT
+  alt Token absent ou invalide
+    Guard-->>Vehicle: Unauthorized
+    Vehicle-->>GW: Erreur GraphQL
+    GW-->>FE: Erreur GraphQL
+    FE-->>Operator: Affiche acces refuse
+  else Token valide OPERATOR/ADMIN
+    Vehicle->>DB: Recherche Vehicle par id
+    alt Vehicule introuvable
+      DB-->>Vehicle: Aucun resultat
+      Vehicle-->>GW: NotFoundException
+      GW-->>FE: Erreur GraphQL
+    else Vehicule trouve
+      Vehicle->>Vehicle: Genere latitude/longitude/vitesse
+      Vehicle->>DB: Cree VehiclePosition
+      Vehicle-->>GW: VehiclePosition
+      GW-->>FE: VehiclePosition
+      FE->>FE: Rafraichit historique et marqueur carte
+      FE-->>Operator: Position simulee visible
+    end
+  end

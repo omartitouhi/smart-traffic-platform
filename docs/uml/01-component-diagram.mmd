@@ -1,0 +1,47 @@
+flowchart LR
+  user["Utilisateur"]
+  browser["Navigateur"]
+  frontend["Frontend Next.js\nsmart-traffic-dashboard\nLeaflet + GraphQL client"]
+  gateway["API Gateway GraphQL\nRoutage operations\nForward Authorization"]
+
+  subgraph backend["Backend NestJS microservices"]
+    auth["Auth Service\nRegister/Login/JWT/Refresh/Profile"]
+    vehicle["Vehicle Service\nVehicules + positions GPS\nSimulation GPS"]
+    traffic["Traffic Service\nZones + densite\nDetection congestion"]
+    notification["Notification Service\nNotifications GraphQL\nWebSocket /notifications"]
+    incident["Incident Service\nDeclaration + statut incidents"]
+  end
+
+  db[("PostgreSQL\nPrisma")]
+  ws["Canal WebSocket\nNotifications temps reel"]
+  docker["Docker Compose\nReseau smart-traffic-network\nVolume PostgreSQL"]
+  ci["GitHub Actions CI/CD\ninstall + lint + tests + build + docker build"]
+
+  user --> browser
+  browser --> frontend
+  frontend -->|"HTTP GraphQL"| gateway
+  frontend <-->|"Socket.IO /notifications"| ws
+  ws <--> notification
+
+  gateway -->|"register/login/me/refresh/logout"| auth
+  gateway -->|"CRUD vehicules + GPS"| vehicle
+  gateway -->|"zones + measureTrafficDensity"| traffic
+  gateway -->|"notifications utilisateur"| notification
+  gateway -->|"incidents"| incident
+
+  auth --> db
+  vehicle --> db
+  traffic --> db
+  notification --> db
+  incident --> db
+
+  traffic -->|"createNotificationFromEvent"| notification
+  incident -->|"createNotificationFromEvent"| notification
+
+  docker -.-> frontend
+  docker -.-> gateway
+  docker -.-> backend
+  docker -.-> db
+  ci -.-> frontend
+  ci -.-> backend
+  ci -.-> docker

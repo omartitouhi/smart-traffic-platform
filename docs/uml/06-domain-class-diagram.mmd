@@ -1,0 +1,122 @@
+classDiagram
+  direction LR
+
+  class User {
+    +String id
+    +String email
+    +String password
+    +String firstName
+    +String lastName
+    +Role role
+    +String refreshTokenHash
+    +DateTime refreshTokenExpiresAt
+    +DateTime createdAt
+    +DateTime updatedAt
+  }
+
+  class Vehicle {
+    +String id
+    +String matricule
+    +String brand
+    +String model
+    +String type
+    +String status
+    +DateTime createdAt
+    +DateTime updatedAt
+  }
+
+  class VehiclePosition {
+    +String id
+    +String vehicleId
+    +Decimal latitude
+    +Decimal longitude
+    +Decimal speed
+    +DateTime recordedAt
+  }
+
+  class TrafficZone {
+    +String id
+    +String name
+    +String description
+    +Decimal latitude
+    +Decimal longitude
+    +Decimal radius
+    +Int vehicleCount
+    +Decimal density
+    +CongestionLevel congestionLevel
+    +Boolean isCongested
+    +DateTime createdAt
+    +DateTime updatedAt
+  }
+
+  class Notification {
+    +String id
+    +String title
+    +String message
+    +NotificationType type
+    +Boolean isRead
+    +String userId
+    +DateTime createdAt
+    +DateTime updatedAt
+  }
+
+  class Incident {
+    +String id
+    +String title
+    +String description
+    +IncidentType type
+    +IncidentStatus status
+    +Decimal latitude
+    +Decimal longitude
+    +String address
+    +DateTime createdAt
+    +DateTime updatedAt
+  }
+
+  class Role {
+    <<enumeration>>
+    ADMIN
+    OPERATOR
+  }
+
+  class CongestionLevel {
+    <<enumeration>>
+    LOW
+    MEDIUM
+    HIGH
+  }
+
+  class NotificationType {
+    <<enumeration>>
+    INFO
+    WARNING
+    SUCCESS
+    ERROR
+    TRAFFIC_ALERT
+    INCIDENT_ALERT
+  }
+
+  class IncidentType {
+    <<enumeration>>
+    ACCIDENT
+    TRAVAUX
+    ROUTE_FERMEE
+    EMBOUTEILLAGE
+  }
+
+  class IncidentStatus {
+    <<enumeration>>
+    SIGNALE
+    EN_COURS
+    RESOLU
+  }
+
+  User --> Role
+  Vehicle "1" --> "*" VehiclePosition : positions
+  TrafficZone --> CongestionLevel
+  Notification --> NotificationType
+  Notification "0..*" ..> "0..1" User : userId logique
+  Incident --> IncidentType
+  Incident --> IncidentStatus
+  Incident ..> Notification : cree une alerte
+  TrafficZone ..> Notification : congestion cree une alerte

@@ -1,0 +1,41 @@
+sequenceDiagram
+  autonumber
+  actor Operator as Operateur
+  participant FE as Frontend Next.js
+  participant GW as API Gateway GraphQL
+  participant Guard as GqlJwtAuthGuard
+  participant Incident as Incident Service
+  participant DB as PostgreSQL
+  participant Notif as Notification Service
+  participant WS as WebSocket /notifications
+
+  FE->>WS: Connexion Socket.IO notifications
+  WS-->>FE: Connexion acceptee
+
+  Operator->>FE: Declare un incident
+  FE->>GW: mutation createIncident(input)\nAuthorization: Bearer JWT
+  GW->>Incident: Forward mutation + Authorization
+  Incident->>Guard: Validation JWT
+  alt Token absent ou invalide
+    Guard-->>Incident: Unauthorized
+    Incident-->>GW: Erreur GraphQL
+    GW-->>FE: Erreur GraphQL
+    FE-->>Operator: Affiche acces refuse
+  else Token valide OPERATOR/ADMIN
+    Incident->>DB: Cree Incident status SIGNALE
+    Incident->>Notif: mutation createNotificationFromEvent\nIncident alert
+    Notif->>DB: Cree Notification
+    Notif->>WS: Emet notification temps reel
+    WS-->>FE: Notification recue
+    Incident-->>GW: Incident cree
+    GW-->>FE: Incident cree
+    FE->>FE: Ajoute incident sur la carte
+    FE-->>Operator: Confirmation
+  end
+
+  Operator->>FE: Change le statut de l'incident
+  FE->>GW: mutation updateIncidentStatus(id, status)
+  GW->>Incident: Forward mutation + Authorization
+  Incident->>DB: Met a jour le statut
+  Incident-->>GW: Incident mis a jour
+  GW-->>FE: Incident mis a jour
