@@ -190,6 +190,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_GRAPHQL_GATEWAY_URL: http://localhost:4000/graphql
+        NEXT_PUBLIC_NOTIFICATION_WS_URL: http://localhost:3005/notifications
     container_name: smart-traffic-frontend
     restart: unless-stopped
     environment:
@@ -197,6 +198,7 @@ services:
       PORT: 3000
       GRAPHQL_GATEWAY_URL: http://api-gateway:3000/graphql
       NEXT_PUBLIC_GRAPHQL_GATEWAY_URL: http://localhost:4000/graphql
+      NEXT_PUBLIC_NOTIFICATION_WS_URL: http://localhost:3005/notifications
     ports:
       - "3000:3000"
     depends_on:

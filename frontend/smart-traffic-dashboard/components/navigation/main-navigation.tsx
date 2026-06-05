@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  Bell,
   Car,
   ChevronRight,
   LayoutDashboard,
@@ -10,11 +11,13 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/features/auth/auth-provider";
+import { NotificationBell } from "@/features/notifications";
 
 const navigationItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vehicles", label: "Vehicles", icon: Car },
   { href: "/traffic", label: "Traffic", icon: TrafficCone },
+  { href: "/notifications", label: "Notifications", icon: Bell },
 ];
 
 type MainNavigationProps = {
@@ -73,6 +76,7 @@ export function MainNavigation({ variant = "topbar" }: MainNavigationProps) {
                   : "flex items-center gap-3 sm:border-l sm:border-border sm:pl-4"
             }
         >
+          <NotificationBell className={isSidebar ? "w-full" : ""} />
           {user ? (
               <div className={isSidebar ? "" : "hidden md:block"}>
                 <p className="text-sm font-medium text-zinc-950">
