@@ -1,0 +1,85 @@
+query Notifications($input: NotificationsQueryInput!) {
+  notifications(input: $input) {
+    id
+    title
+    message
+    type
+    isRead
+    userId
+    createdAt
+    updatedAt
+  }
+}
+
+query UnreadNotifications($input: NotificationsQueryInput!) {
+  unreadNotifications(input: $input) {
+    id
+    title
+    message
+    type
+    isRead
+    userId
+    createdAt
+    updatedAt
+  }
+}
+
+query UnreadNotificationCount($input: NotificationUserInput!) {
+  unreadNotificationCount(input: $input)
+}
+
+mutation CreateNotification($input: CreateNotificationInput!) {
+  createNotification(input: $input) {
+    id
+    title
+    message
+    type
+    isRead
+    userId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation CreateNotificationFromEvent($input: CreateDomainNotificationEventInput!) {
+  createNotificationFromEvent(input: $input) {
+    id
+    title
+    message
+    type
+    isRead
+    userId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation MarkNotificationAsRead($input: MarkNotificationReadInput!) {
+  markNotificationAsRead(input: $input) {
+    id
+    title
+    message
+    type
+    isRead
+    userId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation MarkAllNotificationsAsRead($input: MarkAllNotificationsReadInput!) {
+  markAllNotificationsAsRead(input: $input) {
+    id
+    title
+    message
+    type
+    isRead
+    userId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteNotification($input: DeleteNotificationInput!) {
+  deleteNotification(input: $input)
+}

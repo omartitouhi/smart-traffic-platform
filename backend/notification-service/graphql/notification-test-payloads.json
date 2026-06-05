@@ -1,0 +1,55 @@
+{
+  "Notifications": {
+    "input": {
+      "userId": "68ab2b30-1ef5-4215-9cdb-7522588f34cd",
+      "take": 20,
+      "skip": 0
+    }
+  },
+  "UnreadNotifications": {
+    "input": {
+      "userId": "68ab2b30-1ef5-4215-9cdb-7522588f34cd",
+      "take": 20,
+      "skip": 0
+    }
+  },
+  "UnreadNotificationCount": {
+    "input": {
+      "userId": "68ab2b30-1ef5-4215-9cdb-7522588f34cd"
+    }
+  },
+  "CreateNotification": {
+    "input": {
+      "title": "Traffic alert",
+      "message": "Congestion detectee dans une zone surveillee.",
+      "type": "TRAFFIC_ALERT",
+      "userId": "68ab2b30-1ef5-4215-9cdb-7522588f34cd"
+    }
+  },
+  "CreateNotificationFromEvent": {
+    "input": {
+      "eventType": "TRAFFIC_ZONE_HIGH",
+      "resourceId": "9f1b7b62-8f40-4fb1-9d72-7d3462321f11",
+      "resourceName": "Centre Ville",
+      "density": 18,
+      "vehicleCount": 180
+    }
+  },
+  "MarkNotificationAsRead": {
+    "input": {
+      "id": "4d5a5952-2c57-43e0-9ed8-bb1ef64ce001",
+      "userId": "68ab2b30-1ef5-4215-9cdb-7522588f34cd"
+    }
+  },
+  "MarkAllNotificationsAsRead": {
+    "input": {
+      "userId": "68ab2b30-1ef5-4215-9cdb-7522588f34cd"
+    }
+  },
+  "DeleteNotification": {
+    "input": {
+      "id": "4d5a5952-2c57-43e0-9ed8-bb1ef64ce001",
+      "userId": "68ab2b30-1ef5-4215-9cdb-7522588f34cd"
+    }
+  }
+}
