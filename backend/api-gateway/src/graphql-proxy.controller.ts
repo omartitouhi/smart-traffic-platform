@@ -57,6 +57,16 @@ const NOTIFICATION_OPERATIONS = new Set([
   'unreadNotifications',
 ]);
 
+const INCIDENT_OPERATIONS = new Set([
+  'declareIncident',
+  'deleteIncident',
+  'incident',
+  'incidents',
+  'incidentsByStatus',
+  'updateIncident',
+  'updateIncidentStatus',
+]);
+
 @Controller('graphql')
 export class GraphQLProxyController {
   @Post()
@@ -107,6 +117,10 @@ export class GraphQLProxyController {
 
     if (NOTIFICATION_OPERATIONS.has(operation)) {
       return this.getRequiredEnv('NOTIFICATION_SERVICE_GRAPHQL_URL');
+    }
+
+    if (INCIDENT_OPERATIONS.has(operation)) {
+      return this.getRequiredEnv('INCIDENT_SERVICE_GRAPHQL_URL');
     }
 
     throw new InternalServerErrorException(

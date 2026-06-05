@@ -34,6 +34,8 @@ jobs:
             path: backend/traffic-service
           - name: notification-service
             path: backend/notification-service
+          - name: incident-service
+            path: backend/incident-service
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -74,6 +76,9 @@ jobs:
             command: npx eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
           - name: notification-service
             path: backend/notification-service
+            command: npx eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
+          - name: incident-service
+            path: backend/incident-service
             command: npx eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
     steps:
       - name: Checkout repository
@@ -127,6 +132,9 @@ jobs:
           - name: notification-service
             path: backend/notification-service
             command: npm test -- --runInBand
+          - name: incident-service
+            path: backend/incident-service
+            command: npm test -- --runInBand
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -173,6 +181,8 @@ jobs:
             path: backend/traffic-service
           - name: notification-service
             path: backend/notification-service
+          - name: incident-service
+            path: backend/incident-service
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
