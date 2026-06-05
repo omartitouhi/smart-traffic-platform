@@ -135,6 +135,11 @@ export class NotificationGateway
   }
 
   emitNotificationDeleted(notification: NotificationEntity): void {
+    if (!notification.userId) {
+      this.server.emit('notification.deleted', notification);
+      return;
+    }
+
     this.server
       .to(this.userRoom(notification.userId))
       .emit('notification.deleted', notification);

@@ -12,7 +12,7 @@ export type AppNotification = {
   message: string;
   type: NotificationType;
   isRead: boolean;
-  userId: string;
+  userId: string | null;
   createdAt: string;
   updatedAt: string;
 };

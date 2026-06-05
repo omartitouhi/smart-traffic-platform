@@ -23,8 +23,8 @@ export class NotificationEntity {
   @Field()
   isRead!: boolean;
 
-  @Field(() => ID)
-  userId!: string;
+  @Field(() => ID, { nullable: true })
+  userId!: string | null;
 
   @Field()
   createdAt!: Date;

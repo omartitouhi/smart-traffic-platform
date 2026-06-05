@@ -3,6 +3,7 @@ import { NotificationType } from '@prisma/client';
 import {
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
@@ -33,10 +34,10 @@ export class CreateNotificationInput {
   })
   type!: NotificationType;
 
-  @Field(() => ID)
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
   @IsUUID('4', {
     message: 'L identifiant utilisateur doit etre un UUID valide.',
   })
-  @IsNotEmpty({ message: 'L identifiant utilisateur est obligatoire.' })
-  userId!: string;
+  userId?: string;
 }

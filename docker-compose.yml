@@ -92,11 +92,14 @@ services:
       NODE_ENV: production
       PORT: 3000
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
+      NOTIFICATION_SERVICE_GRAPHQL_URL: http://notification-service:3000/graphql
     ports:
       - "3004:3000"
     depends_on:
       database:
         condition: service_healthy
+      notification-service:
+        condition: service_started
     networks:
       - smart-traffic-network
     healthcheck:
@@ -224,3 +227,4 @@ networks:
 
 volumes:
   smart_traffic_postgres_data:
+

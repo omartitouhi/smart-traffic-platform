@@ -1,4 +1,5 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CreateDomainNotificationEventInput } from './dto/create-domain-notification-event.input';
 import { CreateNotificationInput } from './dto/create-notification.input';
 import { DeleteNotificationInput } from './dto/delete-notification.input';
 import { MarkAllNotificationsReadInput } from './dto/mark-all-notifications-read.input';
@@ -38,6 +39,13 @@ export class NotificationResolver {
     @Args('input') input: CreateNotificationInput,
   ): Promise<NotificationEntity> {
     return this.notificationService.createNotification(input);
+  }
+
+  @Mutation(() => NotificationEntity)
+  createNotificationFromEvent(
+    @Args('input') input: CreateDomainNotificationEventInput,
+  ): Promise<NotificationEntity> {
+    return this.notificationService.createFromDomainEvent(input);
   }
 
   @Mutation(() => NotificationEntity)

@@ -45,6 +45,7 @@ const TRAFFIC_OPERATIONS = new Set([
 
 const NOTIFICATION_OPERATIONS = new Set([
   'createNotification',
+  'createNotificationFromEvent',
   'deleteNotification',
   'markAllAsRead',
   'markAllNotificationsAsRead',

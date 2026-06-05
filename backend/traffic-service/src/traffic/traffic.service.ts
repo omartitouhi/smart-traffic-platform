@@ -13,6 +13,7 @@ import { CreateTrafficZoneInput } from './dto/create-traffic-zone.input';
 import { MeasureTrafficDensityInput } from './dto/measure-traffic-density.input';
 import { UpdateTrafficDensityInput } from './dto/update-traffic-density.input';
 import { UpdateTrafficZoneInput } from './dto/update-traffic-zone.input';
+import { NotificationEventPublisher } from './notification-event.publisher';
 
 type TrafficZoneRecord = {
   id: string;
@@ -31,10 +32,10 @@ type TrafficZoneRecord = {
 
 function isPrismaErrorWithCode(error: unknown): error is { code: string } {
   return (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      typeof error.code === 'string'
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string'
   );
 }
 
@@ -43,17 +44,18 @@ export class TrafficService {
   private readonly logger = new Logger(TrafficService.name);
 
   constructor(
-      @Inject('PrismaService')
-      private readonly prisma: PrismaService,
+    @Inject('PrismaService')
+    private readonly prisma: PrismaService,
+    private readonly notificationPublisher: NotificationEventPublisher,
   ) {}
 
   async createTrafficZone(
-      input: CreateTrafficZoneInput,
+    input: CreateTrafficZoneInput,
   ): Promise<TrafficZoneRecord> {
     const vehicleCount = input.vehicleCount ?? 0;
     const trafficMetrics = this.calculateTrafficMetrics(
-        vehicleCount,
-        input.radius,
+      vehicleCount,
+      input.radius,
     );
 
     try {
@@ -69,11 +71,13 @@ export class TrafficService {
         },
       });
 
-      return this.toTrafficZoneRecord(zone);
+      const record = this.toTrafficZoneRecord(zone);
+      await this.publishHighCongestionIfNeeded(null, record);
+      return record;
     } catch (error) {
       this.handlePrismaError(
-          error,
-          'Erreur lors de la creation de la zone de circulation.',
+        error,
+        'Erreur lors de la creation de la zone de circulation.',
       );
     }
   }
@@ -92,8 +96,8 @@ export class TrafficService {
       return zones.map((zone) => this.toTrafficZoneRecord(zone));
     } catch (error) {
       this.handlePrismaError(
-          error,
-          'Erreur lors de la recuperation des zones de circulation.',
+        error,
+        'Erreur lors de la recuperation des zones de circulation.',
       );
     }
   }
@@ -104,15 +108,15 @@ export class TrafficService {
   }
 
   async updateTrafficZone(
-      id: string,
-      input: UpdateTrafficZoneInput,
+    id: string,
+    input: UpdateTrafficZoneInput,
   ): Promise<TrafficZoneRecord> {
     const currentZone = await this.findTrafficZoneOrThrow(id);
     const data = this.buildUpdateData(input, currentZone);
 
     if (Object.keys(data).length === 0) {
       throw new BadRequestException(
-          'Aucun champ valide fourni pour la mise a jour de la zone.',
+        'Aucun champ valide fourni pour la mise a jour de la zone.',
       );
     }
 
@@ -122,22 +126,27 @@ export class TrafficService {
         data,
       });
 
-      return this.toTrafficZoneRecord(updatedZone);
+      const record = this.toTrafficZoneRecord(updatedZone);
+      await this.publishHighCongestionIfNeeded(
+        currentZone.congestionLevel,
+        record,
+      );
+      return record;
     } catch (error) {
       this.handlePrismaError(
-          error,
-          'Erreur lors de la mise a jour de la zone de circulation.',
+        error,
+        'Erreur lors de la mise a jour de la zone de circulation.',
       );
     }
   }
 
   async updateTrafficDensity(
-      input: UpdateTrafficDensityInput,
+    input: UpdateTrafficDensityInput,
   ): Promise<TrafficZoneRecord> {
     const zone = await this.findTrafficZoneOrThrow(input.zoneId);
     const trafficMetrics = this.calculateTrafficMetrics(
-        input.vehicleCount,
-        Number(zone.radius),
+      input.vehicleCount,
+      Number(zone.radius),
     );
 
     try {
@@ -149,17 +158,19 @@ export class TrafficService {
         },
       });
 
-      return this.toTrafficZoneRecord(updatedZone);
+      const record = this.toTrafficZoneRecord(updatedZone);
+      await this.publishHighCongestionIfNeeded(zone.congestionLevel, record);
+      return record;
     } catch (error) {
       this.handlePrismaError(
-          error,
-          'Erreur lors de la mise a jour de la densite du trafic.',
+        error,
+        'Erreur lors de la mise a jour de la densite du trafic.',
       );
     }
   }
 
   async measureTrafficDensity(
-      input: MeasureTrafficDensityInput,
+    input: MeasureTrafficDensityInput,
   ): Promise<TrafficZoneRecord> {
     return this.updateTrafficDensity(input);
   }
@@ -174,8 +185,8 @@ export class TrafficService {
       return zones.map((zone) => this.toTrafficZoneRecord(zone));
     } catch (error) {
       this.handlePrismaError(
-          error,
-          'Erreur lors de la detection des zones congestionnees.',
+        error,
+        'Erreur lors de la detection des zones congestionnees.',
       );
     }
   }
@@ -190,14 +201,14 @@ export class TrafficService {
       return true;
     } catch (error) {
       this.handlePrismaError(
-          error,
-          'Erreur lors de la suppression de la zone de circulation.',
+        error,
+        'Erreur lors de la suppression de la zone de circulation.',
       );
     }
   }
 
   private async findTrafficZoneOrThrow(
-      id: string,
+    id: string,
   ): Promise<Prisma.TrafficZoneGetPayload<object>> {
     try {
       const zone = await this.prisma.trafficZone.findUnique({ where: { id } });
@@ -209,22 +220,22 @@ export class TrafficService {
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       this.handlePrismaError(
-          error,
-          'Erreur lors de la recuperation de la zone de circulation.',
+        error,
+        'Erreur lors de la recuperation de la zone de circulation.',
       );
     }
   }
 
   private buildUpdateData(
-      input: UpdateTrafficZoneInput,
-      currentZone: Prisma.TrafficZoneGetPayload<object>,
+    input: UpdateTrafficZoneInput,
+    currentZone: Prisma.TrafficZoneGetPayload<object>,
   ): Prisma.TrafficZoneUpdateInput {
     const data: Prisma.TrafficZoneUpdateInput = {};
     const nextVehicleCount = input.vehicleCount ?? currentZone.vehicleCount;
     const nextRadius =
-        input.radius !== undefined ? input.radius : Number(currentZone.radius);
+      input.radius !== undefined ? input.radius : Number(currentZone.radius);
     const shouldRecalculateMetrics =
-        input.vehicleCount !== undefined || input.radius !== undefined;
+      input.vehicleCount !== undefined || input.radius !== undefined;
 
     if (input.name !== undefined) data.name = input.name.trim();
     if (input.description !== undefined) {
@@ -238,8 +249,8 @@ export class TrafficService {
 
     if (shouldRecalculateMetrics) {
       Object.assign(
-          data,
-          this.calculateTrafficMetrics(nextVehicleCount, nextRadius),
+        data,
+        this.calculateTrafficMetrics(nextVehicleCount, nextRadius),
       );
     }
 
@@ -247,8 +258,8 @@ export class TrafficService {
   }
 
   private calculateTrafficMetrics(
-      vehicleCount: number,
-      radius: number,
+    vehicleCount: number,
+    radius: number,
   ): {
     density: number;
     congestionLevel: CongestionLevel;
@@ -256,7 +267,7 @@ export class TrafficService {
   } {
     if (!Number.isFinite(vehicleCount) || vehicleCount < 0) {
       throw new BadRequestException(
-          'Le nombre de vehicules doit etre superieur ou egal a 0.',
+        'Le nombre de vehicules doit etre superieur ou egal a 0.',
       );
     }
 
@@ -266,7 +277,7 @@ export class TrafficService {
 
     if (radius <= 0) {
       throw new BadRequestException(
-          'Le rayon doit etre strictement superieur a 0.',
+        'Le rayon doit etre strictement superieur a 0.',
       );
     }
 
@@ -284,6 +295,25 @@ export class TrafficService {
     if (density < 5) return CongestionLevel.LOW;
     if (density <= 15) return CongestionLevel.MEDIUM;
     return CongestionLevel.HIGH;
+  }
+
+  private async publishHighCongestionIfNeeded(
+    previousLevel: CongestionLevel | null,
+    zone: TrafficZoneRecord,
+  ): Promise<void> {
+    const becameHigh =
+      zone.congestionLevel === CongestionLevel.HIGH &&
+      previousLevel !== CongestionLevel.HIGH;
+
+    if (!becameHigh) return;
+
+    await this.notificationPublisher.publish({
+      eventType: 'TRAFFIC_ZONE_HIGH',
+      resourceId: zone.id,
+      resourceName: zone.name,
+      density: zone.density,
+      vehicleCount: zone.vehicleCount,
+    });
   }
 
   private clamp(value: number, min: number, max: number): number {
@@ -323,7 +353,7 @@ export class TrafficService {
   private handlePrismaError(error: unknown, fallbackMessage: string): never {
     if (isPrismaErrorWithCode(error) && error.code === 'P2002') {
       throw new ConflictException(
-          'Une zone de circulation avec ce nom existe deja.',
+        'Une zone de circulation avec ce nom existe deja.',
       );
     }
 

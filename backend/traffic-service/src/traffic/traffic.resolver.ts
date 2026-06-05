@@ -71,7 +71,7 @@ export class TrafficResolver {
 
   @Query(() => TrafficZoneEntity)
   trafficZone(
-      @Args('id', { type: () => ID }) id: string,
+    @Args('id', { type: () => ID }) id: string,
   ): Promise<TrafficZoneEntity> {
     return this.trafficService.getTrafficZoneById(id);
   }
@@ -83,29 +83,29 @@ export class TrafficResolver {
 
   @Mutation(() => TrafficZoneEntity)
   createTrafficZone(
-      @Args('input') input: CreateTrafficZoneInput,
+    @Args('input') input: CreateTrafficZoneInput,
   ): Promise<TrafficZoneEntity> {
     return this.trafficService.createTrafficZone(input);
   }
 
   @Mutation(() => TrafficZoneEntity)
   updateTrafficZone(
-      @Args('id', { type: () => ID }) id: string,
-      @Args('input') input: UpdateTrafficZoneInput,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateTrafficZoneInput,
   ): Promise<TrafficZoneEntity> {
     return this.trafficService.updateTrafficZone(id, input);
   }
 
   @Mutation(() => TrafficZoneEntity)
   updateTrafficDensity(
-      @Args('input') input: UpdateTrafficDensityInput,
+    @Args('input') input: UpdateTrafficDensityInput,
   ): Promise<TrafficZoneEntity> {
     return this.trafficService.updateTrafficDensity(input);
   }
 
   @Mutation(() => Boolean)
   deleteTrafficZone(
-      @Args('id', { type: () => ID }) id: string,
+    @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
     return this.trafficService.deleteTrafficZone(id);
   }

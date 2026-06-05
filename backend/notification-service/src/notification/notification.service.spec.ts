@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { NotificationType } from '@prisma/client';
+import { DomainNotificationEventType } from './dto/create-domain-notification-event.input';
 import { NotificationGateway } from './notification.gateway';
 import { NotificationService } from './notification.service';
 
@@ -9,7 +10,7 @@ type NotificationRecord = {
   message: string;
   type: NotificationType;
   isRead: boolean;
-  userId: string;
+  userId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -141,7 +142,10 @@ describe('NotificationService', () => {
     });
 
     expect(prisma.notification.findMany).toHaveBeenCalledWith({
-      where: { userId: notification.userId, isRead: false },
+      where: {
+        OR: [{ userId: notification.userId }, { userId: null }],
+        isRead: false,
+      },
       orderBy: { createdAt: 'desc' },
       take: 10,
       skip: 0,
@@ -160,7 +164,10 @@ describe('NotificationService', () => {
     });
 
     expect(prisma.notification.findMany).toHaveBeenCalledWith({
-      where: { userId: notification.userId, isRead: false },
+      where: {
+        OR: [{ userId: notification.userId }, { userId: null }],
+        isRead: false,
+      },
       orderBy: { createdAt: 'desc' },
       take: 10,
       skip: 0,
@@ -177,7 +184,10 @@ describe('NotificationService', () => {
     });
 
     expect(prisma.notification.count).toHaveBeenCalledWith({
-      where: { userId: notification.userId, isRead: false },
+      where: {
+        OR: [{ userId: notification.userId }, { userId: null }],
+        isRead: false,
+      },
     });
     expect(result).toBe(3);
   });
@@ -231,7 +241,7 @@ describe('NotificationService', () => {
     expect(prisma.notification.updateMany).toHaveBeenCalledWith({
       where: {
         id: { in: [notification.id, secondNotification.id] },
-        userId: notification.userId,
+        OR: [{ userId: notification.userId }, { userId: null }],
       },
       data: { isRead: true },
     });
@@ -266,6 +276,31 @@ describe('NotificationService', () => {
       0,
     );
     expect(result).toBe(true);
+  });
+
+  it('creates a global traffic notification from a domain event', async () => {
+    const notification = createNotification({ userId: null });
+    prisma.notification.create.mockResolvedValue(notification);
+
+    const result = await service.createFromDomainEvent({
+      eventType: DomainNotificationEventType.TRAFFIC_ZONE_HIGH,
+      resourceId: '9f1b7b62-8f40-4fb1-9d72-7d3462321f11',
+      resourceName: 'Centre Ville',
+      density: 18,
+      vehicleCount: 180,
+    });
+
+    expect(prisma.notification.create).toHaveBeenCalledWith({
+      data: {
+        title: 'Zone de trafic congestionnee',
+        message:
+          'La zone Centre Ville est passee au niveau HIGH avec une densite de 18.',
+        type: NotificationType.TRAFFIC_ALERT,
+        userId: null,
+      },
+    });
+    expect(gateway.emitNotificationCreated).toHaveBeenCalledWith(result);
+    expect(gateway.emitUnreadCount).not.toHaveBeenCalled();
   });
 
   it('throws NotFoundException when notification does not belong to user', async () => {

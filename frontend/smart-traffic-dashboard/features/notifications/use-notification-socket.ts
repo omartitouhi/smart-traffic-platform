@@ -27,7 +27,10 @@ type UseNotificationSocketOptions = {
   onUnreadCount?: (count: number) => void;
 };
 
-function isForCurrentUser(notificationUserId: string | undefined, userId: string) {
+function isForCurrentUser(
+  notificationUserId: string | null | undefined,
+  userId: string,
+) {
   return !notificationUserId || notificationUserId === userId;
 }
 

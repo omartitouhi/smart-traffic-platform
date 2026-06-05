@@ -5,8 +5,16 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import type { Notification, Prisma } from '@prisma/client';
+import {
+  NotificationType,
+  type Notification,
+  type Prisma,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  CreateDomainNotificationEventInput,
+  DomainNotificationEventType,
+} from './dto/create-domain-notification-event.input';
 import { CreateNotificationInput } from './dto/create-notification.input';
 import { DeleteNotificationInput } from './dto/delete-notification.input';
 import { MarkAllNotificationsReadInput } from './dto/mark-all-notifications-read.input';
@@ -43,7 +51,7 @@ export class NotificationService {
           title: input.title.trim(),
           message: input.message.trim(),
           type: input.type,
-          userId: input.userId,
+          userId: input.userId ?? null,
         },
       });
       const entity = this.toNotificationEntity(notification);
@@ -70,7 +78,7 @@ export class NotificationService {
     const take = this.clamp(input.take ?? 50, 1, 100);
     const skip = Math.max(input.skip ?? 0, 0);
     const where: Prisma.NotificationWhereInput = {
-      userId: input.userId,
+      OR: [{ userId: input.userId }, { userId: null }],
       ...(input.isRead !== undefined ? { isRead: input.isRead } : {}),
     };
 
@@ -103,7 +111,10 @@ export class NotificationService {
   ): Promise<number> {
     try {
       return await this.prisma.notification.count({
-        where: { userId: input.userId, isRead: false },
+        where: {
+          OR: [{ userId: input.userId }, { userId: null }],
+          isRead: false,
+        },
       });
     } catch (error) {
       this.handlePrismaError(
@@ -132,7 +143,7 @@ export class NotificationService {
       });
       const entity = this.toNotificationEntity(updatedNotification);
       this.notificationGateway.emitNotificationRead(entity);
-      await this.emitUnreadCountForUser(entity.userId);
+      await this.emitUnreadCountForUser(input.userId);
       return entity;
     } catch (error) {
       this.handlePrismaError(
@@ -153,7 +164,10 @@ export class NotificationService {
   ): Promise<NotificationEntity[]> {
     try {
       const unreadNotifications = await this.prisma.notification.findMany({
-        where: { userId: input.userId, isRead: false },
+        where: {
+          OR: [{ userId: input.userId }, { userId: null }],
+          isRead: false,
+        },
         orderBy: { createdAt: 'desc' },
       });
 
@@ -168,7 +182,7 @@ export class NotificationService {
       await this.prisma.notification.updateMany({
         where: {
           id: { in: notificationIds },
-          userId: input.userId,
+          OR: [{ userId: input.userId }, { userId: null }],
         },
         data: { isRead: true },
       });
@@ -176,7 +190,7 @@ export class NotificationService {
       const updatedNotifications = await this.prisma.notification.findMany({
         where: {
           id: { in: notificationIds },
-          userId: input.userId,
+          OR: [{ userId: input.userId }, { userId: null }],
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -218,13 +232,23 @@ export class NotificationService {
     }
   }
 
+  async createFromDomainEvent(
+    input: CreateDomainNotificationEventInput,
+  ): Promise<NotificationEntity> {
+    const notification = this.buildNotificationFromDomainEvent(input);
+    return this.createNotification(notification);
+  }
+
   private async findNotificationForUserOrThrow(
     id: string,
     userId: string,
   ): Promise<Notification> {
     try {
       const notification = await this.prisma.notification.findFirst({
-        where: { id, userId },
+        where: {
+          id,
+          OR: [{ userId }, { userId: null }],
+        },
       });
 
       if (!notification) {
@@ -258,9 +282,51 @@ export class NotificationService {
     };
   }
 
-  private async emitUnreadCountForUser(userId: string): Promise<void> {
+  private buildNotificationFromDomainEvent(
+    input: CreateDomainNotificationEventInput,
+  ): CreateNotificationInput {
+    const resourceName = input.resourceName?.trim() || 'ressource inconnue';
+
+    switch (input.eventType) {
+      case DomainNotificationEventType.TRAFFIC_ZONE_HIGH:
+        return {
+          title: 'Zone de trafic congestionnee',
+          message: `La zone ${resourceName} est passee au niveau HIGH avec une densite de ${input.density ?? 'N/A'}.`,
+          type: NotificationType.TRAFFIC_ALERT,
+          userId: input.userId,
+        };
+      case DomainNotificationEventType.INCIDENT_DECLARED:
+        return {
+          title: 'Nouvel incident declare',
+          message: `Un incident a ete declare pour ${resourceName}.`,
+          type: NotificationType.INCIDENT_ALERT,
+          userId: input.userId,
+        };
+      case DomainNotificationEventType.INCIDENT_STATUS_CHANGED:
+        return {
+          title: 'Statut incident mis a jour',
+          message: `Le statut de ${resourceName} est passe de ${input.previousStatus ?? 'N/A'} a ${input.status ?? 'N/A'}.`,
+          type: NotificationType.INCIDENT_ALERT,
+          userId: input.userId,
+        };
+      case DomainNotificationEventType.VEHICLE_IN_CONGESTED_ZONE:
+        return {
+          title: 'Vehicule dans une zone congestionnee',
+          message: `Un vehicule a envoye une position dans la zone congestionnee ${resourceName}.`,
+          type: NotificationType.TRAFFIC_ALERT,
+          userId: input.userId,
+        };
+    }
+  }
+
+  private async emitUnreadCountForUser(userId: string | null): Promise<void> {
+    if (!userId) return;
+
     const count = await this.prisma.notification.count({
-      where: { userId, isRead: false },
+      where: {
+        OR: [{ userId }, { userId: null }],
+        isRead: false,
+      },
     });
     this.notificationGateway.emitUnreadCount(userId, count);
   }
