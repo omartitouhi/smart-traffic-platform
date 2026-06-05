@@ -7,6 +7,7 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import { IncidentStatus, IncidentType } from '@prisma/client';
 import { IncidentService } from './incident.service';
+import { NotificationEventPublisher } from './notification-event.publisher';
 
 type PrismaMock = {
   incident: {
@@ -21,6 +22,7 @@ type PrismaMock = {
 describe('IncidentService', () => {
   let service: IncidentService;
   let prisma: PrismaMock;
+  let notificationPublisher: Pick<NotificationEventPublisher, 'publish'>;
 
   const createdAt = new Date('2026-06-05T10:00:00.000Z');
   const updatedAt = new Date('2026-06-05T10:05:00.000Z');
@@ -50,10 +52,17 @@ describe('IncidentService', () => {
         delete: jest.fn(),
       },
     };
+    notificationPublisher = {
+      publish: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IncidentService,
+        {
+          provide: NotificationEventPublisher,
+          useValue: notificationPublisher,
+        },
         {
           provide: 'PrismaService',
           useValue: prisma,
@@ -90,6 +99,12 @@ describe('IncidentService', () => {
         longitude: 10.1815,
         address: 'Autoroute A1, sortie 12',
       },
+    });
+    expect(notificationPublisher.publish).toHaveBeenCalledWith({
+      eventType: 'INCIDENT_DECLARED',
+      resourceId: incident.id,
+      resourceName: incident.title,
+      status: IncidentStatus.SIGNALE,
     });
   });
 
@@ -164,7 +179,7 @@ describe('IncidentService', () => {
     });
   });
 
-  it('should update incident status', async () => {
+  it('should update incident status and publish a status change event', async () => {
     const updated = { ...incident, status: IncidentStatus.EN_COURS };
     prisma.incident.findUnique.mockResolvedValue(incident);
     prisma.incident.update.mockResolvedValue(updated);
@@ -179,6 +194,25 @@ describe('IncidentService', () => {
       where: { id: incident.id },
       data: { status: IncidentStatus.EN_COURS },
     });
+    expect(notificationPublisher.publish).toHaveBeenCalledWith({
+      eventType: 'INCIDENT_STATUS_CHANGED',
+      resourceId: incident.id,
+      resourceName: incident.title,
+      previousStatus: IncidentStatus.SIGNALE,
+      status: IncidentStatus.EN_COURS,
+    });
+  });
+
+  it('should not publish an event when the status is unchanged', async () => {
+    prisma.incident.findUnique.mockResolvedValue(incident);
+    prisma.incident.update.mockResolvedValue(incident);
+
+    await service.updateIncidentStatus({
+      id: incident.id,
+      status: IncidentStatus.SIGNALE,
+    });
+
+    expect(notificationPublisher.publish).not.toHaveBeenCalled();
   });
 
   it('should update non-status fields of an incident', async () => {

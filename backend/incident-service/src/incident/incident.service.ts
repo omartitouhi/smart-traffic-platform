@@ -11,6 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateIncidentInput } from './dto/create-incident.input';
 import { UpdateIncidentInput } from './dto/update-incident.input';
 import { UpdateIncidentStatusInput } from './dto/update-incident-status.input';
+import { NotificationEventPublisher } from './notification-event.publisher';
 
 export type IncidentRecord = {
   id: string;
@@ -41,6 +42,7 @@ export class IncidentService {
   constructor(
     @Inject('PrismaService')
     private readonly prisma: PrismaService,
+    private readonly notificationPublisher: NotificationEventPublisher,
   ) {}
 
   async declareIncident(input: CreateIncidentInput): Promise<IncidentRecord> {
@@ -56,7 +58,14 @@ export class IncidentService {
         },
       });
 
-      return this.toIncidentRecord(incident);
+      const record = this.toIncidentRecord(incident);
+      await this.notificationPublisher.publish({
+        eventType: 'INCIDENT_DECLARED',
+        resourceId: record.id,
+        resourceName: record.title,
+        status: record.status,
+      });
+      return record;
     } catch (error) {
       this.handlePrismaError(
         error,
@@ -134,7 +143,7 @@ export class IncidentService {
   async updateIncidentStatus(
     input: UpdateIncidentStatusInput,
   ): Promise<IncidentRecord> {
-    await this.findIncidentOrThrow(input.id);
+    const current = await this.findIncidentOrThrow(input.id);
 
     try {
       const updated = await this.prisma.incident.update({
@@ -142,7 +151,17 @@ export class IncidentService {
         data: { status: input.status },
       });
 
-      return this.toIncidentRecord(updated);
+      const record = this.toIncidentRecord(updated);
+      if (current.status !== record.status) {
+        await this.notificationPublisher.publish({
+          eventType: 'INCIDENT_STATUS_CHANGED',
+          resourceId: record.id,
+          resourceName: record.title,
+          previousStatus: current.status,
+          status: record.status,
+        });
+      }
+      return record;
     } catch (error) {
       this.handlePrismaError(
         error,
