@@ -8,7 +8,7 @@ import {
   DELETE_VEHICLE_MUTATION,
   SIMULATE_VEHICLE_POSITION_MUTATION,
 } from "@/graphql/mutations/vehicle.mutations";
-import { VEHICLE_QUERY } from "@/graphql/queries/vehicle.queries";
+import { VEHICLE_QUERY, VEHICLES_QUERY } from "@/graphql/queries/vehicle.queries";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
 import { Badge, vehicleStatusTone } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -88,7 +88,14 @@ export function VehicleDetails({ vehicleId }: VehicleDetailsProps) {
 
   async function handleDelete() {
     try {
-      await deleteVehicle({ variables: { id: vehicleId } });
+      const result = await deleteVehicle({
+        variables: { id: vehicleId },
+        refetchQueries: [{ query: VEHICLES_QUERY }],
+        awaitRefetchQueries: true,
+      });
+      if (!result.data?.deleteVehicle) {
+        throw new Error("La suppression du vehicule a ete refusee.");
+      }
       notify.success("Vehicule supprime.");
       router.replace("/vehicles");
     } catch (deleteError) {

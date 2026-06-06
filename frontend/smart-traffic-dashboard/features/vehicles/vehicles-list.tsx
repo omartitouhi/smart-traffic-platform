@@ -79,9 +79,17 @@ export function VehiclesList() {
   async function confirmDelete() {
     if (!vehicleToDelete) return;
     try {
-      await deleteVehicle({ variables: { id: vehicleToDelete.id } });
+      const result = await deleteVehicle({
+        variables: { id: vehicleToDelete.id },
+        refetchQueries: [{ query: VEHICLES_QUERY }],
+        awaitRefetchQueries: true,
+      });
+      if (!result.data?.deleteVehicle) {
+        throw new Error("La suppression du vehicule a ete refusee.");
+      }
       notify.success("Vehicule supprime.");
       setVehicleToDelete(null);
+      setPage(1);
       await refetch();
     } catch (deleteError) {
       notify.error(

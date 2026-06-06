@@ -59,7 +59,6 @@ export class IncidentResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(Role.ADMIN)
   deleteIncident(@Args('id', { type: () => ID }) id: string): Promise<boolean> {
     return this.incidentService.deleteIncident(id);
   }

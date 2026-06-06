@@ -118,9 +118,17 @@ export function IncidentsList() {
     if (!incidentToDelete) return;
 
     try {
-      await deleteIncident({ variables: { id: incidentToDelete.id } });
+      const result = await deleteIncident({
+        variables: { id: incidentToDelete.id },
+        refetchQueries: [{ query: INCIDENTS_QUERY }],
+        awaitRefetchQueries: true,
+      });
+      if (!result.data?.deleteIncident) {
+        throw new Error("La suppression de l'incident a ete refusee.");
+      }
       notify.success("Incident supprime.");
       setIncidentToDelete(null);
+      setPage(1);
       await refetch();
     } catch (deleteError) {
       notify.error(

@@ -105,7 +105,6 @@ export class VehicleResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(Role.ADMIN)
   deleteVehicle(@Args('id', { type: () => ID }) id: string): Promise<boolean> {
     return this.vehicleService.deleteVehicle(id);
   }

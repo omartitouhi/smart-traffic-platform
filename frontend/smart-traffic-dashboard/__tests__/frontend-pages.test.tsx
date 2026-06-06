@@ -256,7 +256,11 @@ describe("Vehicles list page", () => {
     await user.click(within(dialog).getByRole("button", { name: "Supprimer" }));
 
     await waitFor(() => {
-      expect(deleteVehicle).toHaveBeenCalledWith({ variables: { id: vehicle.id } });
+      expect(deleteVehicle).toHaveBeenCalledWith({
+        variables: { id: vehicle.id },
+        refetchQueries: expect.any(Array),
+        awaitRefetchQueries: true,
+      });
     });
     expect(refetch).toHaveBeenCalled();
   });
@@ -365,7 +369,11 @@ describe("Vehicle detail page", () => {
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Supprimer" }));
 
     await waitFor(() => {
-      expect(deleteVehicle).toHaveBeenCalledWith({ variables: { id: vehicle.id } });
+      expect(deleteVehicle).toHaveBeenCalledWith({
+        variables: { id: vehicle.id },
+        refetchQueries: expect.any(Array),
+        awaitRefetchQueries: true,
+      });
     });
     expect(mocks.replace).toHaveBeenCalledWith("/vehicles");
   });

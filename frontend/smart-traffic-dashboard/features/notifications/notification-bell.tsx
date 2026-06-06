@@ -43,6 +43,14 @@ function formatRelativeDate(value: string) {
   }).format(new Date(value));
 }
 
+function uniqueNotifications(notifications: AppNotification[]) {
+  return notifications.filter(
+    (notification, index, allNotifications) =>
+      allNotifications.findIndex((item) => item.id === notification.id) ===
+      index,
+  );
+}
+
 export function NotificationBell({ className }: { className?: string }) {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -95,7 +103,10 @@ export function NotificationBell({ className }: { className?: string }) {
     { input: NotificationUserInput }
   >(MARK_ALL_NOTIFICATIONS_AS_READ_MUTATION);
 
-  const notifications = data?.notifications ?? [];
+  const notifications = useMemo(
+    () => uniqueNotifications(data?.notifications ?? []),
+    [data?.notifications],
+  );
   const unreadCount = countData?.unreadNotificationCount ?? 0;
 
   const refreshNotifications = useCallback(async () => {

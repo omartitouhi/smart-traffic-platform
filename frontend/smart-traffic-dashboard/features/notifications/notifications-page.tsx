@@ -71,6 +71,14 @@ function notificationTone(type: string) {
   return "default" as const;
 }
 
+function uniqueNotifications(notifications: AppNotification[]) {
+  return notifications.filter(
+    (notification, index, allNotifications) =>
+      allNotifications.findIndex((item) => item.id === notification.id) ===
+      index,
+  );
+}
+
 export function NotificationsPage() {
   const { user } = useAuth();
   const [notificationToDelete, setNotificationToDelete] =
@@ -123,7 +131,10 @@ export function NotificationsPage() {
     { input: DeleteNotificationInput }
   >(DELETE_NOTIFICATION_MUTATION);
 
-  const notifications = data?.notifications ?? [];
+  const notifications = useMemo(
+    () => uniqueNotifications(data?.notifications ?? []),
+    [data?.notifications],
+  );
   const unreadCount = countData?.unreadNotificationCount ?? 0;
 
   const refresh = useCallback(async () => {
