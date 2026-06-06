@@ -33,6 +33,7 @@ services:
       JWT_REFRESH_SECRET: local_dev_refresh_secret_change_me
       JWT_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
+      GRAPHQL_UI_ENABLED: "true"
       CORS_ORIGIN: http://localhost:3000,http://frontend:3000,http://localhost:4000
     ports:
       - "3002:3000"
@@ -64,6 +65,7 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
       JWT_SECRET: local_dev_access_secret_change_me
+      GRAPHQL_UI_ENABLED: "true"
     ports:
       - "3003:3000"
     depends_on:
@@ -94,6 +96,7 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
       JWT_SECRET: local_dev_access_secret_change_me
+      GRAPHQL_UI_ENABLED: "true"
       NOTIFICATION_SERVICE_GRAPHQL_URL: http://notification-service:3000/graphql
     ports:
       - "3004:3000"
@@ -127,6 +130,7 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
       JWT_SECRET: local_dev_access_secret_change_me
+      GRAPHQL_UI_ENABLED: "true"
       CORS_ORIGIN: http://localhost:3000,http://frontend:3000,http://localhost:4000
     ports:
       - "3005:3000"
@@ -158,6 +162,7 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
       JWT_SECRET: local_dev_access_secret_change_me
+      GRAPHQL_UI_ENABLED: "true"
       NOTIFICATION_SERVICE_GRAPHQL_URL: http://notification-service:3000/graphql
     ports:
       - "3006:3000"
@@ -195,6 +200,7 @@ services:
       NOTIFICATION_SERVICE_GRAPHQL_URL: http://notification-service:3000/graphql
       INCIDENT_SERVICE_GRAPHQL_URL: http://incident-service:3000/graphql
       DATABASE_URL: postgresql://smart_traffic:smart_traffic_password@database:5432/smart_traffic?schema=public
+      GRAPHQL_UI_ENABLED: "true"
       CORS_ORIGIN: http://localhost:3000
     ports:
       - "4000:3000"

@@ -1,4 +1,5 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
@@ -9,6 +10,9 @@ import { IncidentModule } from './incident/incident.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 const isProd = process.env.NODE_ENV === 'production';
+const isGraphqlUiEnabled =
+  process.env.GRAPHQL_UI_ENABLED === 'true' ||
+  (process.env.GRAPHQL_UI_ENABLED !== 'false' && !isProd);
 
 @Module({
   imports: [
@@ -16,8 +20,11 @@ const isProd = process.env.NODE_ENV === 'production';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
-      introspection: !isProd,
-      playground: !isProd,
+      introspection: isGraphqlUiEnabled,
+      playground: false,
+      plugins: isGraphqlUiEnabled
+        ? [ApolloServerPluginLandingPageLocalDefault({ embed: true })]
+        : [],
       context: ({ req }: { req: Request }) => ({ req }),
     }),
     AuthModule,

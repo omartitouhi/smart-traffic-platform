@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_FILTER } from '@nestjs/core';
 import { join } from 'path';
@@ -9,6 +10,9 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 const isProd = process.env.NODE_ENV === 'production';
+const isGraphqlUiEnabled =
+  process.env.GRAPHQL_UI_ENABLED === 'true' ||
+  (process.env.GRAPHQL_UI_ENABLED !== 'false' && !isProd);
 
 /**
  * AppModule — module racine de l'application.
@@ -48,8 +52,11 @@ const isProd = process.env.NODE_ENV === 'production';
       sortSchema: true,
       context: ({ req }: { req: Request }) => ({ req }),
       // Désactiver l'introspection et le playground en production
-      introspection: !isProd,
-      playground: !isProd,
+      introspection: isGraphqlUiEnabled,
+      playground: false,
+      plugins: isGraphqlUiEnabled
+        ? [ApolloServerPluginLandingPageLocalDefault({ embed: true })]
+        : [],
     }),
     PrismaModule,
     AuthModule,

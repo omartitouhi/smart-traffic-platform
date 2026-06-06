@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -8,6 +9,9 @@ import { AuthModule } from './common/auth/auth.module';
 import { VehicleModule } from './vehicle/vehicle.module';
 
 const isProd = process.env.NODE_ENV === 'production';
+const isGraphqlUiEnabled =
+  process.env.GRAPHQL_UI_ENABLED === 'true' ||
+  (process.env.GRAPHQL_UI_ENABLED !== 'false' && !isProd);
 
 @Module({
   imports: [
@@ -15,8 +19,11 @@ const isProd = process.env.NODE_ENV === 'production';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
-      introspection: !isProd,
-      playground: !isProd,
+      introspection: isGraphqlUiEnabled,
+      playground: false,
+      plugins: isGraphqlUiEnabled
+        ? [ApolloServerPluginLandingPageLocalDefault({ embed: true })]
+        : [],
       context: ({ req }: { req: Request }) => ({ req }),
     }),
     AuthModule,
