@@ -189,8 +189,12 @@ describe("Dashboard page", () => {
     render(<DashboardHome />);
 
     expect(screen.getByText("Bonjour, Traffic Operator")).toBeInTheDocument();
+    expect(screen.getByText("Indicateurs metier")).toBeInTheDocument();
+    expect(screen.getByText("Vehicules")).toBeInTheDocument();
+    expect(screen.getByText("Positions GPS")).toBeInTheDocument();
+    expect(screen.getByText("Zones")).toBeInTheDocument();
+    expect(screen.getByText("Incidents actifs")).toBeInTheDocument();
     expect(screen.getByText("Vehicle Management")).toBeInTheDocument();
-    expect(screen.getByText("Gateway")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Logout" }));
 

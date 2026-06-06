@@ -37,6 +37,10 @@ query VehiclePositions($vehicleId: ID!) {
   }
 }
 
+query VehiclePositionCount {
+  vehiclePositionCount
+}
+
 # Vehicle mutations
 
 mutation CreateVehicle($input: CreateVehicleInput!) {

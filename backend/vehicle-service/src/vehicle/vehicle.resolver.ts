@@ -3,6 +3,7 @@ import {
   Field,
   Float,
   ID,
+  Int,
   Mutation,
   ObjectType,
   Query,
@@ -87,6 +88,11 @@ export class VehicleResolver {
     @Args('vehicleId', { type: () => ID }) vehicleId: string,
   ): Promise<VehiclePositionEntity[]> {
     return this.vehicleService.getPositionHistory(vehicleId);
+  }
+
+  @Query(() => Int)
+  vehiclePositionCount(): Promise<number> {
+    return this.vehicleService.getVehiclePositionCount();
   }
 
   @Mutation(() => VehicleEntity)

@@ -30,3 +30,9 @@ export const VEHICLE_POSITIONS_QUERY = gql`
   }
   ${VEHICLE_POSITION_FRAGMENT}
 `;
+
+export const VEHICLE_POSITION_COUNT_QUERY = gql`
+  query VehiclePositionCount {
+    vehiclePositionCount
+  }
+`;

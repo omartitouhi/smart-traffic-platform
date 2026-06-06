@@ -50,6 +50,7 @@ export const OPERATION_ROUTES: Partial<Record<string, ServiceKey>> = {
   simulateVehiclePosition: 'VEHICLE_SERVICE_GRAPHQL_URL',
   updateVehicle: 'VEHICLE_SERVICE_GRAPHQL_URL',
   vehicle: 'VEHICLE_SERVICE_GRAPHQL_URL',
+  vehiclePositionCount: 'VEHICLE_SERVICE_GRAPHQL_URL',
   vehiclePositions: 'VEHICLE_SERVICE_GRAPHQL_URL',
   vehicles: 'VEHICLE_SERVICE_GRAPHQL_URL',
 

@@ -1,20 +1,35 @@
 "use client";
 
+import { useQuery } from "@apollo/client/react";
 import Link from "next/link";
 import {
-  Activity,
+  AlertTriangle,
   Car,
   LogOut,
   MapPinned,
+  RefreshCw,
   ShieldCheck,
   TrafficCone,
   TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { Button } from "@/components/ui/button";
-import { MetricCard } from "@/components/ui/feedback";
+import { ErrorState, MetricCard } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
 import { InteractiveMap } from "@/components/map/interactive-map";
+import {
+  VEHICLE_POSITION_COUNT_QUERY,
+  VEHICLES_QUERY,
+} from "@/graphql/queries/vehicle.queries";
+import {
+  CONGESTED_ZONES_QUERY,
+  TRAFFIC_ZONES_QUERY,
+} from "@/graphql/queries/traffic.queries";
+import { INCIDENTS_QUERY } from "@/graphql/queries/incident.queries";
+import { UNREAD_NOTIFICATION_COUNT_QUERY } from "@/graphql/queries/notification.queries";
+import type { Incident } from "@/types/incident";
+import type { TrafficZone } from "@/types/traffic";
+import type { Vehicle } from "@/types/vehicle";
 
 const navigationCards = [
   {
@@ -43,9 +58,102 @@ const navigationCards = [
   },
 ];
 
+type VehiclesResult = {
+  vehicles: Vehicle[];
+};
+
+type VehiclePositionCountResult = {
+  vehiclePositionCount: number;
+};
+
+type TrafficZonesResult = {
+  trafficZones: TrafficZone[];
+};
+
+type CongestedZonesResult = {
+  congestedZones: TrafficZone[];
+};
+
+type IncidentsResult = {
+  incidents: Incident[];
+};
+
+type UnreadNotificationCountResult = {
+  unreadNotificationCount: number;
+};
+
+function formatMetric(value: number | undefined, loading: boolean) {
+  if (loading) return "...";
+  return String(value ?? 0);
+}
+
 export function DashboardHome() {
   const { logout, user } = useAuth();
   const displayName = user ? `${user.firstName} ${user.lastName}` : "Operator";
+  const {
+    data: vehiclesData,
+    loading: vehiclesLoading,
+    error: vehiclesError,
+    refetch: refetchVehicles,
+  } = useQuery<VehiclesResult>(VEHICLES_QUERY);
+  const {
+    data: positionsData,
+    loading: positionsLoading,
+    error: positionsError,
+    refetch: refetchPositions,
+  } = useQuery<VehiclePositionCountResult>(VEHICLE_POSITION_COUNT_QUERY);
+  const {
+    data: trafficData,
+    loading: trafficLoading,
+    error: trafficError,
+    refetch: refetchTraffic,
+  } = useQuery<TrafficZonesResult>(TRAFFIC_ZONES_QUERY);
+  const {
+    data: congestedData,
+    loading: congestedLoading,
+    error: congestedError,
+    refetch: refetchCongested,
+  } = useQuery<CongestedZonesResult>(CONGESTED_ZONES_QUERY);
+  const {
+    data: incidentsData,
+    loading: incidentsLoading,
+    error: incidentsError,
+    refetch: refetchIncidents,
+  } = useQuery<IncidentsResult>(INCIDENTS_QUERY);
+  const {
+    data: unreadData,
+    loading: unreadLoading,
+    error: unreadError,
+    refetch: refetchUnread,
+  } = useQuery<UnreadNotificationCountResult>(
+    UNREAD_NOTIFICATION_COUNT_QUERY,
+    {
+      variables: {
+        input: {},
+      },
+    },
+  );
+  const statsError =
+    vehiclesError ??
+    positionsError ??
+    trafficError ??
+    congestedError ??
+    incidentsError ??
+    unreadError;
+  const activeIncidentCount =
+    incidentsData?.incidents.filter((incident) => incident.status !== "RESOLU")
+      .length ?? 0;
+
+  function refetchDashboardStats() {
+    void Promise.all([
+      refetchVehicles(),
+      refetchPositions(),
+      refetchTraffic(),
+      refetchCongested(),
+      refetchIncidents(),
+      refetchUnread(),
+    ]);
+  }
 
   return (
       <div className="space-y-8">
@@ -72,31 +180,88 @@ export function DashboardHome() {
           </Button>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-              icon={<Car className="size-5" aria-hidden="true" />}
-              label="Flotte"
-              value="Active"
-              helper="Gestion centralisee des vehicules"
-          />
-          <MetricCard
-              icon={<MapPinned className="size-5" aria-hidden="true" />}
-              label="GPS"
-              value="Trace"
-              helper="Positions historisees par vehicule"
-          />
-          <MetricCard
-              icon={<Activity className="size-5" aria-hidden="true" />}
-              label="Gateway"
-              value="GraphQL"
-              helper="Point d'entree unique du frontend"
-          />
-          <MetricCard
-              icon={<TrafficCone className="size-5" aria-hidden="true" />}
-              label="Trafic"
-              value="Zones"
-              helper="Densite et congestion par zone"
-          />
+        <section className="space-y-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="size-4 text-zinc-700" aria-hidden="true" />
+              <h3 className="text-lg font-semibold">Indicateurs metier</h3>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Statistiques calculees depuis l API Gateway GraphQL.
+            </p>
+          </div>
+
+          {statsError ? (
+            <ErrorState
+              title="Statistiques indisponibles"
+              message="Impossible de charger les indicateurs metier depuis l API Gateway GraphQL."
+              action={
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="sm"
+                  onClick={refetchDashboardStats}
+                  icon={<RefreshCw className="size-4" aria-hidden="true" />}
+                >
+                  Reessayer
+                </Button>
+              }
+            />
+          ) : null}
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+            <MetricCard
+                icon={<Car className="size-5" aria-hidden="true" />}
+                label="Vehicules"
+                value={formatMetric(
+                  vehiclesData?.vehicles.length,
+                  vehiclesLoading,
+                )}
+                helper="Nombre total enregiste"
+            />
+            <MetricCard
+                icon={<MapPinned className="size-5" aria-hidden="true" />}
+                label="Positions GPS"
+                value={formatMetric(
+                  positionsData?.vehiclePositionCount,
+                  positionsLoading,
+                )}
+                helper="Total des traces historisees"
+            />
+            <MetricCard
+                icon={<TrafficCone className="size-5" aria-hidden="true" />}
+                label="Zones"
+                value={formatMetric(
+                  trafficData?.trafficZones.length,
+                  trafficLoading,
+                )}
+                helper="Zones de circulation suivies"
+            />
+            <MetricCard
+                icon={<AlertTriangle className="size-5" aria-hidden="true" />}
+                label="Incidents actifs"
+                value={formatMetric(activeIncidentCount, incidentsLoading)}
+                helper="Statuts SIGNALE ou EN_COURS"
+            />
+            <MetricCard
+                icon={<TrafficCone className="size-5" aria-hidden="true" />}
+                label="Congestion"
+                value={formatMetric(
+                  congestedData?.congestedZones.length,
+                  congestedLoading,
+                )}
+                helper="Zones classees HIGH"
+            />
+            <MetricCard
+                icon={<AlertTriangle className="size-5" aria-hidden="true" />}
+                label="Non lues"
+                value={formatMetric(
+                  unreadData?.unreadNotificationCount,
+                  unreadLoading,
+                )}
+                helper="Notifications a traiter"
+            />
+          </div>
         </section>
 
         <section>

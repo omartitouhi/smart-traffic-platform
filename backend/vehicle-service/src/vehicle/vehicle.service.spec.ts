@@ -19,6 +19,7 @@ type PrismaMock = {
   vehiclePosition: {
     create: jest.Mock;
     findMany: jest.Mock;
+    count: jest.Mock;
   };
 };
 
@@ -73,6 +74,7 @@ describe('VehicleService', () => {
       vehiclePosition: {
         create: jest.fn(),
         findMany: jest.fn(),
+        count: jest.fn(),
       },
     };
 
@@ -280,6 +282,15 @@ describe('VehicleService', () => {
       take: 100,
       skip: 0,
     });
+  });
+
+  it('should count GPS positions', async () => {
+    prisma.vehiclePosition.count.mockResolvedValue(12);
+
+    const result = await service.getVehiclePositionCount();
+
+    expect(result).toBe(12);
+    expect(prisma.vehiclePosition.count).toHaveBeenCalledWith();
   });
 
   it('should delete a vehicle', async () => {

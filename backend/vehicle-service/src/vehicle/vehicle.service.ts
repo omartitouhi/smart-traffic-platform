@@ -88,6 +88,17 @@ export class VehicleService {
     return vehicle;
   }
 
+  async getVehiclePositionCount(): Promise<number> {
+    try {
+      return await this.prisma.vehiclePosition.count();
+    } catch (error) {
+      this.handlePrismaError(
+        error,
+        'Erreur lors du comptage des positions GPS.',
+      );
+    }
+  }
+
   async updateVehicle(id: string, input: UpdateVehicleInput): Promise<Vehicle> {
     const data = this.buildUpdateData(input);
 
